@@ -1,8 +1,5 @@
-// meowScripts is a collection of useful scripts that GMS2 could have, but doesn't.
+// Grimoire is a collection of useful scripts that GMS2 could have, but doesn't.
 // If you have any questions, improvements, or requests, let's talk!
-// TWITTER:  https://twitter.com/infamousmrmeow
-// GITHUB:  https://gist.github.com/theinfamousmrmeow/52ffdb4c5c4e76787850a4a218340663
-// LAST UPDATE:  06SEP2021
 
 #region Input Helpers and Definitions
 
