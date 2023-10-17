@@ -1,5 +1,5 @@
-// Grimoire is a collection of useful scripts that GMS2 could have, but doesn't.
 // If you have any questions, improvements, or requests, let's talk!
+
 
 #region Input Helpers and Definitions
 
@@ -505,6 +505,73 @@ function roll(_arg0){
 
 #endregion
 
+#region Procgen
+
+///@desc Returns a DS list of Poisson Disk distributed points within a given circle radius.
+function poisson_circle(_x,_y,_radius,_cellSize,_points_needed){
+
+    //Using Generic Dart-Throwing right now;
+    var _max_rejections = _points_needed*1000;
+    var ls_points = ds_list_create();
+    
+    //Max rejections;
+    for (var i=0;i<_max_rejections;i++){
+        
+        
+		var __dir = random(360);
+		var __len = random(_cellSize);
+		
+		var xx= (_x + lengthdir_x(__len,__dir));
+        var yy= (_y + lengthdir_y(__len,__dir));
+
+        var _valid = true;
+        //Test to see if it is too close to existing points
+        for (var _test=0;_test<ds_list_size(ls_points);_test++){
+            var _test_node = ds_list_find_value(ls_points,_test);
+            if (point_distance(xx,yy,_test_node.x,_test_node.y)<=_cellSize){
+                //This doesn't work, we want to fail out of this inner for loop.
+                _valid = false; 
+				_test = infinity;
+            }
+        }
+        if (_valid) {ds_list_add(ls_points,new vec2(xx,yy))}
+        if (ds_list_size(ls_points)>=_points_needed){i=infinity;}
+    }
+
+    return ls_points;
+
+}
+
+///@desc Returns a DS list of Poisson Disk distributed points within a given rectangle.
+function poisson_rectangle(_x,_y,_width,_height,_cellSize,_points_needed){
+
+    //Using Generic Dart-Throwing right now;
+    var _max_rejections = _points_needed*1000;
+    var ls_points = ds_list_create();
+    
+    //Max rejections;
+    for (var i=0;i<_max_rejections;i++){
+        
+        var xx= (_x + random(_width));
+        var yy= (_y + random(_height));
+        var _valid = true;
+        //Test to see if it is too close to existing points
+        for (var _test=0;_test<ds_list_size(ls_points);_test++){
+            var _test_node = ds_list_find_value(ls_points,_test);
+            if (point_distance(xx,yy,_test_node.x,_test_node.y)<=_cellSize){
+                //This doesn't work, we want to fail out of this inner for loop.
+                _valid = false; 
+				_test = infinity;
+            }
+        }
+        if (_valid) {ds_list_add(ls_points,new vec2(xx,yy))}
+        if (ds_list_size(ls_points)>=_points_needed){i=infinity;}
+    }
+
+    return ls_points;
+
+}
+#endregion
 ///@description Parses a / delimited string into a GMS2 DateTime object
 ///@param timeStampString
 function parseTimestamp(_arg0){
@@ -1136,7 +1203,6 @@ function vec2(_x, _y) constructor{
 		x = _vector.x;
 		y = _vector.y;
 	}
-
 
 }
 
