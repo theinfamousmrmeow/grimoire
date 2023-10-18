@@ -6,3 +6,8 @@ A collection of helpful scripts and macros designed to be used a Submodule in Ga
 - Navigate to the file location of this new asset and script.
 - Initialize this git submodule at this location.
 - It will override your `scr_grimoire` with this and from that point can be updated automatically as the Grimoire expands.
+
+
+
+# How to remove
+ git submodule deinit --all -f
