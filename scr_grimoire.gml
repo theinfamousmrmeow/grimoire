@@ -215,7 +215,7 @@ function draw_stacked_sprite_ext() {
 
 #endregion
 
-#region masks
+#region masks/bounding boxes
 
 function bbox_width(){
 	return abs(bbox_right - bbox_left)	
@@ -268,7 +268,6 @@ function view_left(_view){
 }
 
 #endregion
-
 
 #region STRINGS
 ///@param StringToBeSplit
