@@ -1,6 +1,5 @@
 // If you have any questions, improvements, or requests, let's talk!
 
-
 #region Input Helpers and Definitions
 
 #macro PRAGMA_FORCE_INLINE gml_pragma("forceinline")
