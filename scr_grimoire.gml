@@ -3,14 +3,6 @@
 
 #region Input Helpers and Definitions
 
-
-#macro LIVE_CHECK if (live_call()) return live_result;
-#macro LIVE_CHECK_1ARG if (live_call(argument0)) return live_result;
-#macro LIVE_CHECK_2ARG if (live_call(argument0,argument1)) return live_result;
-#macro LIVE_CHECK_3ARG if (live_call(argument0,argument1,argument2)) return live_result;
-#macro LIVE_CHECK_4ARG if (live_call(argument0,argument1,argument2,argument3)) return live_result;
-#macro LIVE_CHECK_5ARG if (live_call(argument0,argument1,argument2,argument3,argument4)) return live_result;
-
 #macro PRAGMA_FORCE_INLINE gml_pragma("forceinline")
 
 #region VIRTUAL KEY DEFS
