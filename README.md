@@ -8,6 +8,9 @@ A collection of helpful scripts and macros designed to be used a Submodule in Ga
 - It will override your `scr_grimoire` with this and from that point can be updated automatically as the Grimoire expands.
 
 
+# How to get lastest
+
+git submodule update --remote -f ./scripts/scr_grimoire
 
 # How to remove
  git submodule deinit --all -f
