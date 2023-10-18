@@ -5,28 +5,35 @@
 #macro PRAGMA_FORCE_INLINE gml_pragma("forceinline")
 
 #region VIRTUAL KEY DEFS
+
+//Letters
 #macro vk_a ord("A")
-#macro vk_s ord("S")
-#macro vk_d ord("D")
-#macro vk_f ord("F")
-#macro vk_w ord("W")
-#macro vk_r ord("R")
-
-#macro vk_z ord("Z")
-#macro vk_x ord("X")
-#macro vk_c ord("C")
-#macro vk_v ord("V")
 #macro vk_b ord("B")
-#macro vk_n ord("N")
-#macro vk_m ord("M")
-
+#macro vk_c ord("C")
+#macro vk_d ord("D")
 #macro vk_e ord("E")
-#macro vk_q ord("Q")
+#macro vk_f ord("F")
+#macro vk_g ord("G")
+#macro vk_h ord("H")
+#macro vk_i ord("I")
 #macro vk_j ord("J")
 #macro vk_k ord("K")
 #macro vk_l ord("L")
-#macro vk_colon 186
-
+#macro vk_m ord("M")
+#macro vk_n ord("N")
+#macro vk_o ord("O")
+#macro vk_p ord("P")
+#macro vk_q ord("Q")
+#macro vk_r ord("R")
+#macro vk_s ord("S")
+#macro vk_t ord("T")
+#macro vk_u ord("U")
+#macro vk_v ord("V")
+#macro vk_w ord("W")
+#macro vk_x ord("X")
+#macro vk_y ord("Y")
+#macro vk_z ord("Z")
+//Digits
 #macro vk_1 ord("1")
 #macro vk_2 ord("2")
 #macro vk_3 ord("3")
@@ -37,11 +44,9 @@
 #macro vk_8 ord("8")
 #macro vk_9 ord("9")
 #macro vk_0 ord("0")
-
+//Punctuation
+#macro vk_colon 186
 #macro vk_tilde 192
-
-#macro vk_g ord("G")
-#macro vk_p ord("P")
 
 #endregion
 
