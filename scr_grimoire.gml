@@ -968,6 +968,22 @@ function array_shuffle(_array) {
 
 #endregion
 
+#region DATA STRUCTURES TO ARRAYS
+
+function ds_list_to_array(_list,_destroy = false){
+	var __size = ds_list_size(_list);
+	var __array = array_create(__size);
+	for (var __i=__size;__i>=0;__i++){
+		__array[__i]=(ds_list_find_value(_list,__i));	
+	}
+	if (_destroy){
+		ds_list_destroy(_list);
+	}
+	return __array;
+}
+
+#endregion
+
 #region SETS
 ///Some wrapper functions that pretend an array is a set.
 ///@desc Pushes either a single element or array of elements following Set theory;
