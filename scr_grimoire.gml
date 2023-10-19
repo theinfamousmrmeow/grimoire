@@ -971,9 +971,9 @@ function array_shuffle(_array) {
 #region DATA STRUCTURES TO ARRAYS
 
 function ds_list_to_array(_list,_destroy = false){
-	var __size = ds_list_size(_list);
+	var __size = ds_list_size(_list)-1;
 	var __array = array_create(__size);
-	for (var __i=__size;__i>=0;__i++){
+	for (var __i=__size;__i>=0;__i--){
 		__array[__i]=(ds_list_find_value(_list,__i));	
 	}
 	if (_destroy){
