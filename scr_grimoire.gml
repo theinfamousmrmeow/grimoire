@@ -870,6 +870,20 @@ function setting_get_string(_section,_key,_value=undefined) {
 #endregion
 #region ARRAYS
 
+function array_to_ds_list(_arr){
+	var __arr = _arr
+	var __list = ds_list_create()
+	array_foreach(__arr, 
+		method(
+			{list: __list},
+			function(_val, _idx){
+				ds_list_add(list, _val)
+			}
+		)
+	)
+	return __list
+}
+
 function array_create_2d(_w,_h,_value=0){
 
 	if (_w <=0 || _h<=0){return undefined;}
@@ -883,7 +897,6 @@ function array_create_2d(_w,_h,_value=0){
 	}
 	
 	return __array;
-	
 }
 
 function array_foreach_2d(_array,_func){
