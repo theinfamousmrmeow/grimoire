@@ -995,6 +995,13 @@ function ds_list_to_array(_list,_destroy = false){
 	return __array;
 }
 
+///@desc Produces an array of distinct values from a ds_list
+function ds_list_to_set(_list,_destroy = false){
+	var __array = []
+	set_push(__array,ds_list_to_array(_list,_destroy))
+	return __array
+}
+
 #endregion
 
 #region SETS
