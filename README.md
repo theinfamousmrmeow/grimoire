@@ -11,7 +11,7 @@ A collection of helpful scripts and macros designed to be used a Submodule in Ga
 
 # How to get lastest
 
-git submodule update --remote -f ./scripts/scr_grimoire
+`git submodule update --remote -f ./scripts/scr_grimoire`
 
 # How to remove
  git submodule deinit --all -f
