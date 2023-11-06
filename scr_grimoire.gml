@@ -47,6 +47,8 @@
 //Punctuation
 #macro vk_colon 186
 #macro vk_tilde 192
+#macro TILDE 192
+#macro NEWLINE chr(10)
 
 #endregion
 
@@ -126,6 +128,13 @@ function image_finish(){
 	if (image_index>=image_number-image_speed){image_speed=0; image_index=image_number-1;  return true;}
 	return false;
 }
+
+///@desc stops the sprite animation at first image;
+function image_end(){
+	if (image_index>=image_number-1){image_speed=0; image_index=0;  return true;}
+	return false;
+}
+
 
 function image_even(){
 	return ((floor(image_index) mod 2)==0)	
@@ -857,7 +866,7 @@ function setting_get_string(_section,_key,_value=undefined) {
 		return __i;
 	}
 	
-	function progress_set(_section,_key,_value){
+	function metaprogress_set(_section,_key,_value){
 		ini_set("progress.ini",_section,_key,_value);
 	}
 	function metaprogress_get_real(_section,_key,_value){
@@ -1432,3 +1441,278 @@ function sprite_assets_get_all_names(){
 
 
 #endregion
+
+#region Struct
+
+/// @function                       deep_copy(ref)
+/// @param {T} ref                  Thing to deep copy
+/// @returns {T}                    New array, or new struct, or new instance of the class, anything else (real / string / etc.) will be returned as-is
+/// @description                    Returns a deep recursive copy of the provided array / struct / constructed struct
+
+function deep_copy(ref) {
+    var ref_new;
+    
+    if (is_array(ref)) {
+        ref_new = array_create(array_length(ref));
+        
+        var length = array_length(ref_new);
+        
+        for (var i = 0; i < length; i++) {
+            ref_new[i] = deep_copy(ref[i]);
+        }
+        
+        return ref_new;
+    }
+    else if (is_struct(ref)) {
+        var base = instanceof(ref);
+        
+        switch (base) {
+            case "struct":
+            case "weakref":
+                ref_new = {};
+                break;
+                
+            default:
+                var constr = method(undefined, asset_get_index(base));
+                ref_new = new constr();
+        }
+        
+        var names = variable_struct_get_names(ref);
+        var length = variable_struct_names_count(ref);
+        
+        for (var i = 0; i < length; i++) {
+            var name = names[i];
+            
+            variable_struct_set(ref_new, name, deep_copy(variable_struct_get(ref, name)));
+        }
+        
+        return ref_new;
+    } else {
+        return ref;
+    }
+}
+
+function array_of_structs_copy(_source,_r=0){
+	log("RECURSION DEPTH:"+string(_r))
+	if (!is_array(_source)){
+		show_debug_message("array_of_structs_copy() - source is not an Array");
+		return;
+	}
+
+	var __len = array_length(_source);
+	
+	var __newArray = array_create(__len,undefined);
+	
+	for (var i = 0; i < __len; ++i) {
+	    var __var = _source[i];
+		//if (is_struct(__var)){
+		//	log("Found a struct in our array:");
+		//	__newArray[i]=struct_copy(__var);
+		//}
+		//else if (is_array(__var)){
+		//	__newArray[i]=array_of_structs_copy(i,r+1);	
+		//}
+		//else {
+			__newArray[i]=__var;
+		//}
+	}
+	
+	return __newArray;
+}
+
+/// @description copies over a struct into a new struct
+/// @function struct_copy(struct_ref)
+/// @param struct_ref the reference to the struct to be copied
+function struct_copy(ref){
+
+	log("struct_copy()");
+
+	if (is_struct(ref)) {
+		
+		 //shows struct to be copied in debug output window
+		show_debug_message("function struct_copy() - original struct:"); show_debug_message(ref);
+		
+        var base = instanceof(ref);
+		var ref_new;
+        log(base);
+        switch (base) {
+            case("struct"):
+            case("weakref"):
+                ref_new = {};
+            break;
+
+			case undefined:
+				//TODO:
+				//Doesn't work???
+			break;
+
+            default:
+                var constr = method(undefined, asset_get_index(base));
+                ref_new = new constr();
+        }
+        
+        var names = variable_struct_get_names(ref);
+        var length = variable_struct_names_count(ref);
+        
+        for (var i = 0; i < length; i++) {
+            var name = names[i];
+			var __var = variable_struct_get(ref,name);
+            
+			if (is_struct(__var)){
+				__var = struct_copy(__var);
+			}
+			
+			variable_struct_set(ref_new, name, __var);
+			
+        }
+        
+		//shows new struct in debug output window
+		show_debug_message("function struct_copy() - new struct:"); show_debug_message(ref_new);
+        return ref_new;
+		
+    } else {
+		
+		show_debug_message("function struct_copy() - argument is not a struct. It cannot be copied.")
+		var empty_struct = {};
+		return empty_struct;
+		
+	}
+
+}	
+
+#endregion
+
+#region SEQUENCES
+
+
+function sequence_sprite_swap(_seqID,_sprite,_spriteSwapped){
+	var myseq = is_struct(_seqID) ? _seqID : sequence_get(_seqID);
+	var __stackGraphicsTracks = ds_stack_create();
+	var __stackFolderTracks = ds_stack_create();
+	ds_stack_push(__stackFolderTracks,myseq);
+	while (!ds_stack_empty(__stackFolderTracks)){
+		var __seq = ds_stack_pop(__stackFolderTracks);
+		var __tracks = __seq.tracks;
+		var __tracksCount = array_length(__tracks);
+		for (var i = 0; i < __tracksCount; ++i) {
+			var __track = __tracks[i];
+			var __type = __track.type;
+			switch (__type){
+				case seqtracktype_graphic:
+					//Push to stack;
+					ds_stack_push(__stackGraphicsTracks,__track)
+					if (array_length(__track.tracks)>0){
+						ds_stack_push(__stackFolderTracks,__track);
+					}
+				break;
+				case seqtracktype_group:
+					//log(__track);
+					ds_stack_push(__stackFolderTracks,__track);
+				break;
+				default:
+			}
+		}
+	}
+	//Disgorge the contents of our Ungodly Stack.
+	 while(!ds_stack_empty(__stackGraphicsTracks)){
+		var __track = ds_stack_pop(__stackGraphicsTracks);
+		log("Popped Seq Graphic Track: "+string(__track.name));
+		var __keyframes = __track.keyframes;
+		var __keyframesCount = array_length(__keyframes);
+		for (var j = 0; j < __keyframesCount; ++j) {
+			var __keyframe = __keyframes[j];
+			var __channels = __keyframe.channels;
+			var __channelCount = array_length(__channels);
+			for (var k = 0; k < __channelCount; ++k) {
+				var __keyframeData = __channels[k];
+				var __originalSprite = __keyframeData.spriteIndex;
+				if (__originalSprite==_sprite)
+				{
+					__keyframeData.spriteIndex = _spriteSwapped;	
+				}
+			}
+		}
+	}
+	//Clean up, clean up, everybody clean up DSDL:KJFS:LDKJFL:KSDJFKL:SDJF:LKSDJF(UIOW#$EYER*()&#%&(WE+(Y+!!%RU@*()$*%R
+	ds_stack_destroy(__stackGraphicsTracks);
+	ds_stack_destroy(__stackFolderTracks);
+
+	return myseq;
+}
+
+function sequence_copy_html5(_seq){
+	
+	var __originalSeq = sequence_get(_seq);
+	
+	var __newSeq = sequence_create();
+	
+	if (is_struct(__newSeq)){
+		log("Sequence Object Structs Are Structs");	
+	}
+	else {
+		log("Sequence Object Structs Are Not Structs");		
+	}
+	
+	log("Original Sequence:");
+	log(__originalSeq);
+	
+	//Stringify failed me.
+	//var __s = json_stringify(__originalSeq);
+	//var __newSeqData = json_parse(__s);
+	//log("JSON STRINGIFY:");
+	//log(__s);
+	//log("JSONNED:");
+	//log(__newSeqData);
+		//log("LN:841");
+	__newSeq.name =__originalSeq.name;
+	__newSeq.loopmode =__originalSeq.loopmode;
+	__newSeq.playbackSpeed =__originalSeq.playbackSpeed;
+	__newSeq.playbackSpeedType =__originalSeq.playbackSpeedType;
+	__newSeq.length =__originalSeq.length;
+	__newSeq.volume =__originalSeq.volume;
+	__newSeq.xorigin =__originalSeq.xorigin;
+	__newSeq.yorigin =__originalSeq.yorigin;
+	__newSeq.messageEventKeyframes = array_of_structs_copy(__originalSeq.messageEventKeyframes);
+	__newSeq.momentKeyframes = array_of_structs_copy(__originalSeq.momentKeyframes);
+	var __tracks =__originalSeq.tracks;
+	var __len = array_length(__tracks); 	
+	//log("LN:853");
+	var __newArray = array_create(__len,undefined);
+	array_copy(__newArray,0,__tracks,0,__len)
+	__newSeq.tracks = __newArray; //array_of_structs_copy(__originalSeq.tracks);
+	
+	//Restore originals???? WHY DOES THIS WORK?????
+	//log("LN:859");
+	__originalSeq.tracks = __newSeq.tracks;
+	__originalSeq.messageEventKeyframes = __newSeq.messageEventKeyframes;
+	__originalSeq.momentKeyframes = __newSeq.momentKeyframes;
+	//log("LN:863");
+	//Sanity check;
+	//WE WILL NEVER SPEAK OF THIS
+	if (os_browser == browser_not_a_browser){
+		//if (__originalSeq.toString()!=__originalSeq.toString()){
+		//	log("sequence_copy() - original does not equal original")	
+		//}
+		//if (__originalSeq.toString()!=__newSeq.toString()){
+		//	log("sequence_copy() - Copy does not equal original")	
+		//}
+	}
+	if (is_struct(__newSeq.tracks[0])){
+		log("Sequence Track Structs Are Structs");	
+	}
+	else {
+		log("Sequence Track Structs Are Not Structs");		
+	}
+	//}
+	//log("LN:878");
+	__newSeq.name = "copyOf_"+string(__originalSeq.name);
+	
+	log("Original Sequence After Copy:");
+	log(__originalSeq);
+	log("Copied Sequence:");
+	log(__newSeq);
+	return __newSeq;	
+}
+
+#endregion
+
