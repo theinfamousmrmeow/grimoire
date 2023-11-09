@@ -1720,7 +1720,7 @@ function sequence_copy_html5(_seq){
 ///https://betterprogramming.pub/making-a-verlet-physics-engine-in-javascript-1dff066d7bc5
 // max physics iterations per frame
 #macro DEFAULT_VERLET_ITERATIONS 100
-
+//Points/Dots
 function VerletDot(_x,_y) constructor {
 	pos = new vec2(x, y);
 	oldpos = new vec2(x, y);
@@ -1749,7 +1749,7 @@ function VerletDot(_x,_y) constructor {
 	}
 	
 }
-
+//Constraints/Sticks
 function VerletStick(_p1, _p2, _length) constructor {
 
     startPoint = _p1;
