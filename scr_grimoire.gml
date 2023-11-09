@@ -1716,3 +1716,91 @@ function sequence_copy_html5(_seq){
 
 #endregion
 
+#region VERLET 
+///https://betterprogramming.pub/making-a-verlet-physics-engine-in-javascript-1dff066d7bc5
+// max physics iterations per frame
+#macro DEFAULT_VERLET_ITERATIONS 100
+
+function VerletDot(_x,_y) constructor {
+	pos = new vec2(x, y);
+	oldpos = new vec2(x, y);
+	fric = 0.97;
+	groundFriction = 0.7;
+	grav = new vec2(0, 1);
+	radius = 5;
+	color = c_purple;
+	mass = 1;
+	
+	tick = function(){
+	    vel = pos.Subtract(oldpos);
+	    vel.Multiply(fric);
+	    oldpos.Set(pos.x, pos.y);
+	    pos.Add(vel);
+	    pos.Add(grav);
+	  }	
+	}
+	
+	constrain = function(){
+		
+	}
+	
+	render = function(){
+		draw_circle_color(pos.x,pos.y,radius,color,c_dkgray,0);	
+	}
+	
+}
+
+function VerletStick(_p1, _p2, _length) constructor {
+
+    startPoint = _p1;
+    endPoint = _p2;
+    stiffness = 2;
+    color = c_purple;
+    
+    if (!_length) {
+      length = startPoint.pos.dist(endPoint.pos);
+    } else {
+      length = _length;
+    }
+
+	tick = function() {
+	  // calculate the distance between two dots
+	  var __dx = endPoint.pos.x - startPoint.pos.x;
+	  var __dy = endPoint.pos.y - startPoint.pos.y;
+	  // pythagoras theorem
+	  var __dist = sqrt(__dx * __dx + __dy * __dy);
+	  // calculate the resting distance betwen the dots
+	  var __diff = (length - __dist) / __dist * stiffness;
+
+	  // getting the offset of the points
+	  var __offsetx = __dx * __dist * 0.5;
+	  var __offsety = __dy * __dist * 0.5;
+
+	  // calculate mass
+	  var __m1 = startPoint.mass + endPoint.mass;
+	  var __m2 = startPoint.mass / __m1;
+	  __m1 = endPoint.mass / __m1;
+
+	  // and finally apply the offset with calculated mass
+	  if (!startPoint.pinned) {
+	    startPoint.pos.x -= __offsetx * __m1;
+	    startPoint.pos.y -= __offsety * __m1;
+	  }
+	  if (!endPoint.pinned) {
+	    endPoint.pos.x += __offsetx * __m2;
+	    endPoint.pos.y += __offsety * __m2;
+	  }
+
+	}
+
+	constrain = function(){
+		
+	}
+	
+	render = function(){
+		draw_line_width_color(startPoint.x,startPoint.y,endPoint.x,endPoint.y,stiffness,color,c_dkgray);
+	}	
+	
+}
+
+#endregion
