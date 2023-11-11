@@ -1718,6 +1718,8 @@ function sequence_copy_html5(_seq){
 
 #region VERLET 
 ///https://betterprogramming.pub/making-a-verlet-physics-engine-in-javascript-1dff066d7bc5
+//https://editor.p5js.org/gelami/sketches/25aU8kaXvl
+//https://github.com/marianpekar/cloth-simulation-2d
 // max physics iterations per frame
 #macro DEFAULT_VERLET_ITERATIONS 100
 //Points/Dots
@@ -1738,10 +1740,11 @@ function VerletDot(_x,_y) constructor {
 	    pos.Add(vel);
 	    pos.Add(grav);
 	  }	
-	}
+	
 	
 	constrain = function(){
-		
+		x = clamp(x,0 + radius,room_width-radius);
+		y = clamp(y,0 + radius,room_height-radius);
 	}
 	
 	render = function(){
