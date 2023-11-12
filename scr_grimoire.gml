@@ -1173,6 +1173,7 @@ function vec2(_x, _y) constructor{
         {
         x -= _other.x;
         y -= _other.y;
+		return self;
         }
     static Multiply = function( _scalar )
         {
@@ -1269,7 +1270,7 @@ function vector_copy(_vector) {
 }
 
 function vector_subtract(_vector_a, _vector_b) {
-	return new  vec2((_vector_a.x - _vector_b.x), (_vector_a.y - _vector_b.y));
+	return new vec2((_vector_a.x - _vector_b.x), (_vector_a.y - _vector_b.y));
 }
 ///@desc Performs as per collision_line, but using a given mp_grid
 function collision_line_grid(_x1,_y1,_x2,_y2,_grid,_resolution){
@@ -1724,8 +1725,8 @@ function sequence_copy_html5(_seq){
 #macro DEFAULT_VERLET_ITERATIONS 100
 //Points/Dots
 function VerletDot(_x,_y) constructor {
-	pos = new vec2(x, y);
-	oldpos = new vec2(x, y);
+	pos = new vec2(_x, _y);
+	oldpos = new vec2(_x, _y);
 	fric = 0.97;
 	groundFriction = 0.7;
 	grav = new vec2(0, 1);
@@ -1734,17 +1735,19 @@ function VerletDot(_x,_y) constructor {
 	mass = 1;
 	
 	tick = function(){
-	    vel = pos.Subtract(oldpos);
-	    vel.Multiply(fric);
+	    var __vel = vector_subtract(pos,oldpos);
+	    __vel.Multiply(fric);
+		
 	    oldpos.Set(pos.x, pos.y);
-	    pos.Add(vel);
+	    pos.Add(__vel);
 	    pos.Add(grav);
+		constrain();
 	  }	
 	
 	
 	constrain = function(){
-		x = clamp(x,0 + radius,room_width-radius);
-		y = clamp(y,0 + radius,room_height-radius);
+		pos.x = clamp(pos.x,0 + radius,room_width-radius);
+		pos.y = clamp(pos.y,0 + radius,room_height-radius);
 	}
 	
 	render = function(){
