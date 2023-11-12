@@ -1161,12 +1161,14 @@ function vec2(_x, _y) constructor{
 	static Set = function(_x,_y){
 		x = _x;
 		y = _y;
+		return self;
 	}
 	
     static Add = function( _other )
         {
         x += _other.x;
         y += _other.y;
+		return self;
         }
 
 	static Subtract = function( _other )
@@ -1180,7 +1182,14 @@ function vec2(_x, _y) constructor{
 		gml_pragma("forceinline");
 		x *= _scalar;
 		y *= _scalar;
+		return self;
 		}
+    static Divide = function( _scalar ){
+		gml_pragma("forceinline");
+		x /= _scalar;
+		y /= _scalar;
+		return self;
+	}
 	static rotate = function(_delta) {
 		gml_pragma("forceinline");
 		//_delta= (_delta / 57.2958);
@@ -1204,14 +1213,18 @@ function vec2(_x, _y) constructor{
 		gml_pragma("forceinline");
 		return point_direction(0, 0, x, y);
 	}
-	
-	static normalize = function() {
+	static Distance = function(_pos) {
+		gml_pragma("forceinline");
+		return point_distance(x, y, _pos.x, _pos.y);
+	}	
+	static Normalize = function() {
 		gml_pragma("forceinline");
 		if ((x != 0) || (y != 0)) {
 			var _factor = 1/sqrt((x * x) + (y * y));
 			x = _factor * x;
 			y = _factor * y;	
 		}
+		return self;
 	}
 	
 	static set_to_velocity = function(_direction,_accel) {
@@ -1229,7 +1242,7 @@ function vec2(_x, _y) constructor{
 	
 	static set_magnitude = function(_scalar) {
 		gml_pragma("forceinline");
-		normalize();
+		Normalize();
 		Multiply(_scalar);	
 	}
 	
@@ -1267,6 +1280,10 @@ function vector_lengthdir(_length, _dir) :  vec2() constructor {
 //Vector Functions Don't Modify the Original Vector
 function vector_copy(_vector) {
 	return new  vec2(_vector.x, _vector.y);
+}
+
+function vector_add(_vector_a, _vector_b) {
+	return new vec2((_vector_a.x + _vector_b.x), (_vector_a.y + _vector_b.y));
 }
 
 function vector_subtract(_vector_a, _vector_b) {
@@ -1733,21 +1750,20 @@ function VerletDot(_x,_y) constructor {
 	radius = 5;
 	color = c_purple;
 	mass = 1;
+	pinned = false;
 	
 	tick = function(){
 	    var __vel = vector_subtract(pos,oldpos);
 	    __vel.Multiply(fric);
-		
 	    oldpos.Set(pos.x, pos.y);
 	    pos.Add(__vel);
 	    pos.Add(grav);
 		constrain();
 	  }	
-	
-	
+		
 	constrain = function(){
-		pos.x = clamp(pos.x,0 + radius,room_width-radius);
-		pos.y = clamp(pos.y,0 + radius,room_height-radius);
+		pos.x = clamp(pos.x,0+radius,room_width-radius);
+		pos.y = clamp(pos.y,-9999,room_height-radius);
 	}
 	
 	render = function(){
@@ -1756,55 +1772,40 @@ function VerletDot(_x,_y) constructor {
 	
 }
 //Constraints/Sticks
-function VerletStick(_p1, _p2, _length) constructor {
+function VerletStick(_p1, _p2, _length=undefined) constructor {
 
     startPoint = _p1;
     endPoint = _p2;
     stiffness = 2;
     color = c_purple;
     
-    if (!_length) {
-      length = startPoint.pos.dist(endPoint.pos);
+    if (is_undefined(_length)) {
+      length = startPoint.pos.Distance(endPoint.pos);
     } else {
       length = _length;
     }
 
 	tick = function() {
-	  // calculate the distance between two dots
-	  var __dx = endPoint.pos.x - startPoint.pos.x;
-	  var __dy = endPoint.pos.y - startPoint.pos.y;
-	  // pythagoras theorem
-	  var __dist = sqrt(__dx * __dx + __dy * __dy);
-	  // calculate the resting distance betwen the dots
-	  var __diff = (length - __dist) / __dist * stiffness;
+	
+      var __stickCenter = vector_add(startPoint.pos,endPoint.pos).Divide(2);
+      var __stickDir = vector_subtract(startPoint.pos,endPoint.pos)
+        .Normalize()
+        .Multiply(length / 2);
 
-	  // getting the offset of the points
-	  var __offsetx = __dx * __dist * 0.5;
-	  var __offsety = __dy * __dist * 0.5;
-
-	  // calculate mass
-	  var __m1 = startPoint.mass + endPoint.mass;
-	  var __m2 = startPoint.mass / __m1;
-	  __m1 = endPoint.mass / __m1;
-
-	  // and finally apply the offset with calculated mass
-	  if (!startPoint.pinned) {
-	    startPoint.pos.x -= __offsetx * __m1;
-	    startPoint.pos.y -= __offsety * __m1;
-	  }
-	  if (!endPoint.pinned) {
-	    endPoint.pos.x += __offsetx * __m2;
-	    endPoint.pos.y += __offsety * __m2;
-	  }
-
-	}
+      if (!startPoint.pinned) {
+        startPoint.pos = vector_add(__stickCenter, __stickDir);
+      }
+      if (!endPoint.pinned) {
+        endPoint.pos = vector_subtract(__stickCenter, __stickDir);
+      }
+    }
 
 	constrain = function(){
 		
 	}
 	
 	render = function(){
-		draw_line_width_color(startPoint.x,startPoint.y,endPoint.x,endPoint.y,stiffness,color,c_dkgray);
+		draw_line_width_color(startPoint.pos.x,startPoint.pos.y,endPoint.pos.x,endPoint.pos.y,stiffness,color,c_dkgray);
 	}	
 	
 }
