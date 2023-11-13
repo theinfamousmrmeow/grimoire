@@ -1768,7 +1768,7 @@ function VerletDot(_x,_y) constructor {
 	}
 	
 	render = function(){
-		draw_circle_color(pos.x,pos.y,radius,color,c_dkgray,0);	
+		draw_circle_color(pos.x,pos.y,radius,(pinned ? c_red : color),(pinned ? c_red : c_dkgray),0);	
 	}
 	
 }
