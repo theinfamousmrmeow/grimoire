@@ -1753,6 +1753,7 @@ function VerletDot(_x,_y) constructor {
 	pinned = false;
 	
 	tick = function(){
+		if (pinned) return;
 	    var __vel = vector_subtract(pos,oldpos);
 	    __vel.Multiply(fric);
 	    oldpos.Set(pos.x, pos.y);
