@@ -47,8 +47,9 @@
 //Punctuation
 #macro vk_colon 186
 #macro vk_tilde 192
-#macro TILDE 192
-#macro NEWLINE chr(10)
+
+#macro CHAR_TILDE 192
+#macro CHAR_NEWLINE chr(10)
 
 #endregion
 
@@ -66,8 +67,6 @@
 #macro mb mouse_check_button
 #endregion
 
-#macro CHAR_TILDE 192
-#macro CHAR_NEWLINE chr(10)
 
 #endregion
 #region Display Helpers
