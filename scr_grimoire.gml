@@ -510,7 +510,38 @@ function roll(_arg0){
 #endregion
 
 #region Procgen
-
+function get_bresenham_points(_start_x, _start_y, _end_x, _end_y){
+	
+	var __delta_col = abs(_end_x - _start_x)
+	var __delta_row = abs(_end_y - _start_y)
+	var __point_x = _start_x
+	var __point_y = _start_y
+	var __horizontal_step = (_start_x < _end_x)
+							?  1 
+							: -1
+	var __vertical_step = (_start_y < _end_y)
+						  ?  1
+						  : -1
+	var __points = []
+	var __difference = __delta_col - __delta_row
+	while(true){
+		
+		var __double_difference = 2* __difference
+		if(__double_difference > -__delta_row){
+			__difference-=__delta_row;
+			__point_x += __horizontal_step
+		}
+		if(__double_difference < __delta_col){
+			__difference+=__delta_col;
+			__point_y += __vertical_step
+		}
+		if((__point_x==_end_x)&&(__point_y==_end_y)){
+			break;
+		}
+		array_push(__points,{x:__point_x, y:__point_y})
+	}
+	return __points;
+}
 ///@desc Returns a DS list of Poisson Disk distributed points within a given circle radius.
 function poisson_circle(_x,_y,_radius,_cellSize,_points_needed){
 
@@ -1510,6 +1541,187 @@ function deep_copy(ref) {
     }
 }
 
+function struct_copy(_struct, _ignore_functions = false, _copy_static = true){
+	if(_struct==undefined) return undefined;
+    var __new_struct = {};
+    var __function_names_list = variable_struct_get_names(_struct);
+    for(var __i = 0; __i< array_length(__function_names_list); __i++){    
+        var __name = __function_names_list[__i];
+        var __val = variable_struct_get(_struct, __name);
+		if(_ignore_functions&&is_method(__val))continue;
+        variable_struct_set(__new_struct, __name, __val);
+    }
+	if(_copy_static){
+		static_set(__new_struct,static_get(_struct));
+	}
+    return __new_struct;
+}
+
+function struct_map(__source, __dest, _ignore_functions = false){
+	if(__source==undefined) return undefined;
+    var __new_struct = __dest;
+    var __function_names_list = variable_struct_get_names(__source);
+    for(var __i = 0; __i< array_length(__function_names_list); __i++){    
+        var __name = __function_names_list[__i];
+        var __val = variable_struct_get(__source, __name);
+		if(_ignore_functions&&is_method(__val))continue;
+        variable_struct_set(__new_struct, __name, __val);
+    }
+    return __new_struct;
+}
+
+/// @desc Function Description
+/// @param {struct} _struct Description
+/// @param {any} _struct_or_constr Description
+/// @param {bool} [_overwrite]=true Description
+function set_struct_type(_struct, _struct_or_constr, _overwrite = true){
+	if(_struct_or_constr==undefined)return;
+	if(is_method(_struct_or_constr)){
+		_struct_or_constr = new _struct_or_constr();
+	}
+	var __function_names_list = variable_struct_get_names(_struct_or_constr);
+	for(var __i = 0; __i< array_length(__function_names_list); __i++){	
+		var __name = __function_names_list[__i];
+		if(!_overwrite && variable_struct_exists(_struct, __name))continue;
+		var __val = variable_struct_get(_struct_or_constr, __name);
+		var __val_2 = variable_struct_get(_struct, __name)
+		if(instanceof(__val_2)=="weakref") {
+			continue;
+		}
+		variable_struct_set(_struct, __name, __val);
+	}
+	delete _struct_or_constr;
+}
+
+/**
+ *  Function Description
+ * @param {struct} _struct  Description
+ * @param {struct, function} _interface  Description
+ * @param {bool} [_ignore_functions]=false Description
+ * @returns {bool}  Description
+ */
+function is_struct_of_type(_struct, _interface, _ignore_functions = false){
+	var __interface_names_list = variable_struct_get_names(_interface);
+	for(var __i = 0; __i< array_length(__interface_names_list); __i++){	
+		var __name = __interface_names_list[__i];
+		var __val = variable_struct_get(_interface, __name)
+		if(is_ptr(__val))continue;
+		if(instanceof(__val)=="weakref")continue;
+		if(_ignore_functions && is_method(__val))continue;
+		
+		if(!variable_struct_exists(_struct, __name)){
+			return false;
+		}
+	}
+	return true;
+}
+
+function struct_typeof(_struct, _constrs = undefined){
+	var _target_struct = undefined;
+	var __constrs = _constrs==undefined
+					?CONSTRUCTORS
+					: _constrs;
+	var __constrs_length = array_length(__constrs);
+	for(var __i=0;__i<__constrs_length;__i++){
+		var __constr = __constrs[__i];
+		_target_struct = new __constr(0,0,0,0,0,0,0,0,0,0,0,0)
+		if(is_struct_of_type(_struct, _target_struct, true)){
+			struct_clear(_target_struct);
+			return constructor_get_name(__i); //__constr;
+		}
+		struct_clear(_target_struct);
+	}
+	return undefined;
+}
+
+function struct_clear(_struct){
+	var __struct_names = variable_struct_get_names(_struct)
+	var __names_length = array_length(__struct_names);
+	for(var __i=0;__i<__names_length;__i++){
+		var __prop_name	= __struct_names[__i]
+		variable_struct_remove(_struct, __prop_name);
+	}
+	delete _struct;
+}
+
+/**
+ *  Creates a new struct type based on the anon struct
+ * @param {struct} _source_struct  The anon struct to be normalized
+ * @returns {struct}  _target_struct The normalized struct
+ */
+function set_struct_normalized(_source_struct){
+	_source_struct = struct_new(_source_struct);
+	//struct_clear(_source_struct);
+	//Iterate through the struct properties and normalize all structs
+	var __struct_names = variable_struct_get_names(_source_struct)
+	var __names_length = array_length(__struct_names);
+	for(var __i=0;__i<__names_length;__i++){
+		var __prop_name	= __struct_names[__i]
+		var __prop_val	= variable_struct_get(_source_struct, __prop_name);
+		if(instanceof(__prop_val)=="weakref")continue;
+		if(is_ptr(__prop_val))continue;
+		if(is_method(__prop_val))continue;
+		if(is_struct(__prop_val)){
+			set_struct_normalized(__prop_val);
+		}else if(is_array(__prop_val)&&array_length(__prop_val)>0){
+			set_structs_normalized(__prop_val);
+		}
+	}
+}
+
+/**
+ * Function Description
+ * @param {array<struct>} _struct_array Description
+ */
+function set_structs_normalized(_struct_array){
+	//Iterate through the array and normalize all structs
+	var __names_length = array_length(_struct_array);
+	for(var __i=0;__i<__names_length;__i++){
+		var __target = _struct_array[__i];
+		if(is_struct(__target)){
+			set_struct_normalized(weak_ref_create(__target))
+		}else if(is_array(__target)){
+			set_structs_normalized(__target)
+		}
+	}
+}
+
+/**
+ * Function Description
+ * @param {struct} _struct Description
+ * @returns {struct} Description
+ */
+function get_new_from_anon(_struct){
+	var __target_struct = undefined;
+	var __constrs = CONSTRUCTORS
+	var __constrs_length = array_length(__constrs);
+	for(var __i=0;__i<__constrs_length;__i++){
+		__target_struct = new __constrs[__i](0,0,0,0,0,0,0,0,0,0,0,0)
+		if(is_struct_of_type(_struct, __target_struct, true)){
+			set_struct_type(__target_struct, _struct, true);
+			struct_clear(_struct);
+			return __target_struct;
+		}
+	}
+	return _struct;
+}
+
+function new_instanceof(_struct){
+	var _base = instanceof(_struct);      
+	switch (_base) {
+	    case "struct":
+	    case "weakref":
+	        return {};
+	        break;
+			
+	    default:
+	        // Feather disable once GM1041
+	        var _constr = method(undefined, asset_get_index(_base));
+	        return new _constr();
+	}
+}
+
+
 function array_of_structs_copy(_source,_r=0){
 	log("RECURSION DEPTH:"+string(_r))
 	if (!is_array(_source)){
@@ -1541,7 +1753,7 @@ function array_of_structs_copy(_source,_r=0){
 /// @description copies over a struct into a new struct
 /// @function struct_copy(struct_ref)
 /// @param struct_ref the reference to the struct to be copied
-function struct_copy(ref){
+function struct_copy_old(ref){
 
 	log("struct_copy()");
 
