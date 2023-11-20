@@ -768,7 +768,8 @@ function instance_nearest_in_array(_x,_y,_array) {
 	var nearest = noone;
 
 	for (var i=0;i<array_length(_array);i++){
-		ds_priority_add(list, id, distance_to_point(_x, _y));
+		var __id = _array[i];
+		ds_priority_add(list, __id, point_distance(__id.x,__id.y,_x, _y));
 	}
 	
 	nearest = ds_priority_find_min(list);
