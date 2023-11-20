@@ -4,6 +4,12 @@
 
 #macro PRAGMA_FORCE_INLINE gml_pragma("forceinline")
 
+#region INDEX MACROS
+
+#macro OBJECT_INDEX_CEILING 100_000
+
+#endregion
+
 #region VIRTUAL KEY DEFS
 
 //Letters
@@ -1319,35 +1325,7 @@ function vector_add(_vector_a, _vector_b) {
 function vector_subtract(_vector_a, _vector_b) {
 	return new vec2((_vector_a.x - _vector_b.x), (_vector_a.y - _vector_b.y));
 }
-///@desc Performs as per collision_line, but using a given mp_grid
-function collision_line_grid(_x1,_y1,_x2,_y2,_grid,_resolution){
-	//Don't bother checking the same TileData position twice;
-	var __lastTileX=-1;
-	var __lastTileY=-1;
-	
-	var __x=_x1,__y=_y1;
-	
-	var __dir = point_direction(_x1,_y1,_x2,_y2);
-	var __dist = point_distance(_x1,_y1,_x2,_y2);
-	
-	var __stepsRequired = floor(__dist / _resolution)
-	
-	for (var __step=0;__step<__stepsRequired;__step++){
-		__x +=lengthdir_x(__step,__dir);
-		__y +=lengthdir_y(__step,__dir);
-		var __tileX = __x div _resolution;
-		var __tileY = __y div _resolution
-		
-		if (__tileX!=__lastTileX || __tileY != __lastTileY){
-			var __tile = mp_grid_get_cell(global.mpGrid,__tileX,__tileY);
-			if (__tile==-1){return 1;}
-			__lastTileX=__tileX;
-			__lastTileY=__tileY;
-		}
-	}
-	//Found nothing!
-	return -1;
-}
+
 
 ///@desc Returns an array of all the instances of the give object_index
 function object_get_instances(_object_index){
@@ -2021,5 +1999,128 @@ function VerletStick(_p1, _p2, _length=undefined) constructor {
 	}	
 	
 }
+
+#endregion
+
+#region COLLISION LINES, LINE OF SIGHT
+
+
+function mp_grid_place_empty(_grid,_resolution,_x,_y){
+	var __return = mp_grid_get_cell(_grid,_x div _resolution,_y div _resolution);
+	return (__return == 0);
+}
+
+
+function raycast_dir(_startx,_starty,_direction,_distance,_stepSize,func){
+	var __endx = _startx + lengthdir_x(_distance,_direction);
+	var __endy = _starty + lengthdir_y(_distance,_direction);
+	return raycast(_startx,_starty,__endx,__endy,_stepSize,func);
+}
+
+function raycast(_startx,_starty,_endx,_endy,_stepSize,func){
+	var __dist = point_distance(_startx,_starty,_endx,_endy);
+	var __dir = point_direction(_startx,_starty,_endx,_endy);
+	var __steps = ceil(__dist / _stepSize);
+	var __x = _startx;
+	var __y = _starty;
+	var __xdif = lengthdir_x(_stepSize,__dir);
+	var __ydif = lengthdir_y(_stepSize,__dir);
+	
+	for (var i = 0; i < __steps; ++i) {
+	   __x += __xdif;
+	   __y += __ydif;  
+	   var __return = func(__x,__y);
+	   if (__return!=undefined) return __return;
+	}
+	return -1;//Means nothing happened, essentially;
+}
+
+
+//Array structure;
+// global.tile_los_array = array_create();
+// usage:  global.tile_los_array[_mp_grid_to_check];
+// returns a flattened 2d array, with each index corresponding to a room tile position like [x,y];
+// Each entry in that array is another array, representing all the flattened x,y tile positions that this tile position has LOS to
+
+//Array Structure concept 2:
+// step 1:  Get a flattened ID of the X and Y pos of the tile
+// step 2:  Create a 2d array. 
+// step 3:  Check LOS between two tiles like global.tile_los[_tile1][_tile2];
+
+function array_index_flatten(_x,_y,_width){
+	return (_x + (_y * _width));
+}
+
+//Called when changing rooms, or any time the Opacity tilemap changes;
+//Important to remember that _w and _h are TILE count, not pixel width/height
+function init_los_cache(_w=ceil(room_width/16),_h=ceil(room_height/16)){
+	//global.los_cache = array_create_2d(_w * _h, _w * _h,undefined);
+}
+
+function collision_line_grid_cache(_x1,_y1,_x2,_y2,_grid,_resolution){
+	//First, check cache
+	//var __w = array_length(global.los_cache);
+	//var __tile1 = array_index_flatten(_x1 div _resolution,_y1 div _resolution,__w);
+	//var __tile2 = array_index_flatten(_x2 div _resolution,_y2 div _resolution,__w);
+	//var __los_cached = global.los_cache[__tile1][__tile2];
+	//if (__los_cached!=undefined) return __los_cached;
+	//If necessary, do collision check
+	var __los = collision_line_grid(_x1,_y1,_x2,_y2,_grid,_resolution);
+	//Then, update the cache!
+	//global.los_cache[__tile1][__tile2] = __los;
+	return __los;
+}
+
+function tiles_have_los(_x1,_y1,_x2,_y2,_grid,_resolution){
+	var __los = collision_line_grid_cache(_x1,_y1,_x2,_y2,_grid,_resolution);
+	if (__los <=0 ) return true;
+	return false;
+}
+
+//Checks to see if Tile1 has LOS to Tile2 and Tile3 has LOS to Tile2
+//The X&Y positions are in pixels
+function tiles_have_los_between(_x1,_y1,_x2,_y2,_x3,_y3,_grid,_resolution){
+	//var __w = array_length(global.los_cache);
+	//var __tile1 = array_index_flatten(_x1 div _resolution,_y1 div _resolution,__w);
+	//var __tile2 = array_index_flatten(_x2 div _resolution,_y2 div _resolution,__w);
+	//var __tile3 = array_index_flatten(_x3 div _resolution,_y3 div _resolution,__w);
+
+	var __los = collision_line_grid_cache(_x1,_y1,_x2,_y2,_grid,_resolution);
+	if (__los>0) return false;
+	var __los2 = collision_line_grid_cache(_x3,_y3,_x2,_y2,_grid,_resolution);
+	if (__los2>0) return false;
+	return true;
+}
+
+///@desc Performs as per collision_line, but using a given mp_grid
+function collision_line_grid(_x1,_y1,_x2,_y2,_grid,_resolution){
+	//Don't bother checking the same TileData position twice;
+	var __lastTileX=-1;
+	var __lastTileY=-1;
+	
+	var __x=_x1,__y=_y1;
+	
+	var __dir = point_direction(_x1,_y1,_x2,_y2);
+	var __dist = point_distance(_x1,_y1,_x2,_y2);
+	
+	var __stepsRequired = floor(__dist / _resolution)
+	
+	for (var __step=0;__step<__stepsRequired;__step++){
+		__x +=lengthdir_x(__step,__dir);
+		__y +=lengthdir_y(__step,__dir);
+		var __tileX = __x div _resolution;
+		var __tileY = __y div _resolution
+		
+		if (__tileX!=__lastTileX || __tileY != __lastTileY){
+			var __tile = mp_grid_get_cell(global.mpGrid,__tileX,__tileY);
+			if (__tile==-1){return 1;}
+			__lastTileX=__tileX;
+			__lastTileY=__tileY;
+		}
+	}
+	//Found nothing!
+	return -1;
+}
+
 
 #endregion
