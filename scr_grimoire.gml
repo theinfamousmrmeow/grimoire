@@ -1023,6 +1023,10 @@ function array_shuffle(_array) {
 	return _array;
 }
 
+function array_get_random(_array){
+	var __len = array_length(_array);
+	return _array[floor(random(__len))];
+}
 
 #endregion
 
