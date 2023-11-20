@@ -753,7 +753,13 @@ function ds_list_pop_last(_list){
 	ds_list_delete(_list,_last);
 	return __val;
 }
-
+function ds_list_pop_first(_list){
+	var _last = 0;
+	if (ds_list_size(_list)<=0){return undefined;}
+	var __val = ds_list_find_value(_list,_last);
+	ds_list_delete(_list,_last);
+	return __val;
+}
 ///@desc Returns the closest instance of out the ids in the array provided;
 function instance_nearest_in_array(_x,_y,_array) {
 
