@@ -1337,6 +1337,31 @@ function vector_subtract(_vector_a, _vector_b) {
 	return new vec2((_vector_a.x - _vector_b.x), (_vector_a.y - _vector_b.y));
 }
 
+function vector_distance(_vector_a,_vector_b){
+	return point_distance(_vector_a.x,_vector_a.y,_vector_b.x,_vector_b.y);
+}
+
+#region Shapes
+
+function Line(_startPoint,_endPoint) constructor{
+	startPoint = _startPoint;
+	endPoint = _endPoint;
+
+	static get_length = function(){
+		return vector_distance(startPoint,endPoint);
+	}
+}
+
+function Triangle(_pointA,_pointB,_pointC){
+
+}
+
+function Rectangle(_pointA,_pointB,_pointC,_pointD) constructor{
+	startPoints = _startPoint;
+	endPoint = _endPoint;
+}
+
+#endregion
 
 ///@desc Returns an array of all the instances of the give object_index
 function object_get_instances(_object_index){
