@@ -1341,6 +1341,10 @@ function vector_distance(_vector_a,_vector_b){
 	return point_distance(_vector_a.x,_vector_a.y,_vector_b.x,_vector_b.y);
 }
 
+function vector_direction(_vector_a,_vector_b){
+	return point_direction(_vector_a.x,_vector_a.y,_vector_b.x,_vector_b.y);
+}
+
 #region Shapes
 
 function Line(_startPoint,_endPoint) constructor{
@@ -1350,13 +1354,29 @@ function Line(_startPoint,_endPoint) constructor{
 	static get_length = function(){
 		return vector_distance(startPoint,endPoint);
 	}
+
+	static get_direction = function(){
+		return vector_direction(startPoint,endPoint);
+	}
 }
 
-function Triangle(_pointA,_pointB,_pointC){
+function Ray(_distance,_direction) constructor{
+	
+}
+
+function Shape() constructor{
 
 }
 
-function Rectangle(_pointA,_pointB,_pointC,_pointD) constructor{
+function Triangle(_pointA,_pointB,_pointC):Shape() constructor{
+
+}
+
+function Square(_pointA,_pointB):Shape() constructor {
+
+}
+
+function Rectangle(_pointA,_pointB,_pointC,_pointD):Square() constructor{
 	startPoints = _startPoint;
 	endPoint = _endPoint;
 }
