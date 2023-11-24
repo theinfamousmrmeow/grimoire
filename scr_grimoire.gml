@@ -704,7 +704,7 @@ function instance_nearest_n() {
 function instance_nearest_faction(_x,_y,_faction){
 	
 	//var __arrayOfResults = array_create(1,0);
-	var __currentDist = 100000;
+	var __currentDist = infinity;
 	var __result = -1;
 	
 	with (obj_agent){
@@ -760,10 +760,14 @@ function ds_list_pop_first(_list){
 	ds_list_delete(_list,_last);
 	return __val;
 }
+
+function instance_nearest_notme(_x,_y,_object_index){
+	var __array = object_get_instances(_object_index,true);
+	return (instance_nearest_in_array(_x,_y,__array));
+}
+
 ///@desc Returns the closest instance of out the ids in the array provided;
 function instance_nearest_in_array(_x,_y,_array) {
-
-
 	var list = ds_priority_create();
 	var nearest = noone;
 
@@ -785,7 +789,7 @@ function instance_nearest_in_array(_x,_y,_array) {
 function instance_nearests() {
 
 	var nearest=-1;
-	var dist=100000;
+	var dist=infinity;
 	var currentNearest=-1;
 
 	var i, arg;
@@ -811,7 +815,7 @@ function instance_nearests() {
 function instance_nearest_array(_x,_y,_arrTypes) {
 
 	var nearest=-1;
-	var dist=100000;
+	var dist=infinity;
 	var currentNearest=-1;
 	var __typeCount = array_length(_arrTypes)
 
@@ -1376,19 +1380,23 @@ function Square(_pointA,_pointB):Shape() constructor {
 
 }
 
-function Rectangle(_pointA,_pointB,_pointC,_pointD):Square() constructor{
+function Rectangle(_pointA,_pointB,_pointC,_pointD) constructor{
 	startPoints = _startPoint;
 	endPoint = _endPoint;
 }
 
+
+
 #endregion
 
 ///@desc Returns an array of all the instances of the give object_index
-function object_get_instances(_object_index){
+function object_get_instances(_object_index,_notme = false){
 	var __arr = array_create(0);
 	for (var i = 0; i < instance_number(_object_index); ++i;)
 	    {
-	    __arr[i] = instance_find(_object_index,i);
+			var __id = instance_find(_object_index,i);
+			if (_notme && __id == id) continue;
+			__arr[i] = __id;
 	    }
 	return __arr;
 }
@@ -1986,6 +1994,12 @@ function sequence_copy_html5(_seq){
 // max physics iterations per frame
 #macro DEFAULT_VERLET_ITERATIONS 100
 //Points/Dots
+/**
+ * @desc A VerletDot object represents a point in a Verlet physics simulation.
+ * @param {number} _x - The initial x-coordinate of the VerletDot.
+ * @param {number} _y - The initial y-coordinate of the VerletDot.
+ * @constructor
+ */
 function VerletDot(_x,_y) constructor {
 	pos = new vec2(_x, _y);
 	oldpos = new vec2(_x, _y);
@@ -2066,12 +2080,21 @@ function mp_grid_place_empty(_grid,_resolution,_x,_y){
 	return (__return == 0);
 }
 
-
-function raycast_dir(_startx,_starty,_direction,_distance,_stepSize,func){
-	var __endx = _startx + lengthdir_x(_distance,_direction);
-	var __endy = _starty + lengthdir_y(_distance,_direction);
-	return raycast(_startx,_starty,__endx,__endy,_stepSize,func);
+///@param _startx The x-coordinate of the starting point.
+/// @param _starty The y-coordinate of the starting point.
+/// @param _direction The direction in which to cast the ray (in degrees).
+/// @param _distance The maximum distance the ray can travel.
+/// @param _stepSize The distance between each step of the raycast.
+/// @param func The function to call for each step of the raycast.
+/// @returns The result of the raycast.
+function raycast_dir(_startx, _starty, _direction, _distance, _stepSize, func) {
+	var __endx = _startx + lengthdir_x(_distance, _direction);
+	var __endy = _starty + lengthdir_y(_distance, _direction);
+	return raycast(_startx, _starty, __endx, __endy, _stepSize, func);
 }
+
+
+
 
 function raycast(_startx,_starty,_endx,_endy,_stepSize,func){
 	var __dist = point_distance(_startx,_starty,_endx,_endy);
@@ -2090,7 +2113,6 @@ function raycast(_startx,_starty,_endx,_endy,_stepSize,func){
 	}
 	return -1;//Means nothing happened, essentially;
 }
-
 
 //Array structure;
 // global.tile_los_array = array_create();
@@ -2133,6 +2155,7 @@ function tiles_have_los(_x1,_y1,_x2,_y2,_grid,_resolution){
 	return false;
 }
 
+
 //Checks to see if Tile1 has LOS to Tile2 and Tile3 has LOS to Tile2
 //The X&Y positions are in pixels
 function tiles_have_los_between(_x1,_y1,_x2,_y2,_x3,_y3,_grid,_resolution){
@@ -2147,10 +2170,16 @@ function tiles_have_los_between(_x1,_y1,_x2,_y2,_x3,_y3,_grid,_resolution){
 	if (__los2>0) return false;
 	return true;
 }
-
-///@desc Performs as per collision_line, but using a given mp_grid
+/// @desc Performs a collision check along a line using a given mp_grid.
+/// @param _x1 The x-coordinate of the starting point of the line.
+/// @param _y1 The y-coordinate of the starting point of the line.
+/// @param _x2 The x-coordinate of the ending point of the line.
+/// @param _y2 The y-coordinate of the ending point of the line.
+/// @param _grid The mp_grid to use for the collision check.
+/// @param _resolution The resolution of the grid cells.
+/// @return Returns 1 if a collision is detected, -1 if no collision is found.
 function collision_line_grid(_x1,_y1,_x2,_y2,_grid,_resolution){
-	//Don't bother checking the same TileData position twice;
+	// Don't bother checking the same TileData position twice;
 	var __lastTileX=-1;
 	var __lastTileY=-1;
 	
@@ -2174,9 +2203,116 @@ function collision_line_grid(_x1,_y1,_x2,_y2,_grid,_resolution){
 			__lastTileY=__tileY;
 		}
 	}
-	//Found nothing!
+	// Found nothing!
 	return -1;
 }
 
 
+#endregion
+
+#region STEERING FORCES
+function force_seek(_x,_y,_weight=1){
+	var _vec = new vec2(_x,_y);
+	//var _velocity = new vec2(hspeed,vspeed);
+	var _pos = new vec2(x,y);
+	_vec.Subtract(_pos);
+	_vec.set_magnitude(_weight);
+	//_vec.Subtract(_velocity);
+	//_vec.limit_magnitude(_max_magnitude);
+	return _vec;
+}
+
+function force_flee(_x,_y,_weight=1){
+	var _vec = new vec2(_x,_y);
+	//var _velocity = new vec2(hspeed,vspeed);
+	var _pos = new vec2(x,y);
+	_vec.Subtract(_pos);
+	_vec.set_magnitude(_weight);
+	_vec.negate();
+	//_vec.Subtract(_velocity);
+	//_vec.limit_magnitude(_max_magnitude);
+	return _vec;
+}
+
+function force_pursue(_target,_force=0.1,_max_magnitude=0.5){
+	var _vec = new vec2(_target.hspeed,_target.vspeed);
+	_vec.Multiply(6);
+	_vec.Add(new vec2(_target.x,_target.y));
+	return seek_force(_vec.x,_vec.y,_force,_max_magnitude);
+}
+
+function force_evade(_target,_force=0.1,_max_magnitude=0.5){
+	var _vec = new vec2(_target.hspeed,_target.vspeed);
+	_vec.Multiply(6);
+	_vec.Add(new vec2(_target.x,_target.y));
+	return force_flee(_vec.x,_vec.y,_force,_max_magnitude);
+}
+
+function force_strafe(_target,_force=0.1,_angle=90,_max_magnitude=0.5){
+	var _vec = new vec2(x,y);
+	_vec.set_magnitude(_force);
+	_vec.Add(new vector_lengthdir(_force, facingTarget + _angle));
+	_vec.limit_magnitude(_max_magnitude);
+	return _vec;
+}
+
+function force_arrive(_x,_y,_slowing_radius=64,_force=0.1,_max_magnitude=0.5){
+	var _vec = new vec2(_x,_y);
+	var _velocity = new vec2(hspeed,vspeed);
+	var _pos = new vec2(x,y);
+	_vec.Subtract(_pos);
+	_vec.set_magnitude(_force);
+	_vec.Subtract(_velocity);
+	_vec.limit_magnitude(_max_magnitude);
+	return _vec;
+}
+
+#macro WANDER_DISTANCE 10
+#macro WANDER_CHANGE 2
+#macro WANDER_POWER 2
+
+function force_wander(_max_magnitude=1,_heading_change = WANDER_CHANGE) {
+
+	var _vec = new vec2(hspeed,vspeed);
+	_vec.set_magnitude(WANDER_DISTANCE+random(2));
+	_vec.Add(new vector_lengthdir(WANDER_POWER, facing));
+	_vec.limit_magnitude(_max_magnitude);
+	
+	if ((current_time + real(id)) mod 1000 == 0){
+		facingTarget +=  random_range(-_heading_change, _heading_change);
+	}
+
+	return _vec;
+
+}
+
+/**
+ * Function Description
+ * @param {array} _array Description
+ * @returns {struct} Description
+ */
+function force_separation_list(_array,_power = 0.75,_range=1000) {
+	
+	var _vec, _count, _vec_to;
+	_vec = new vector_zero();
+	_count = 0;
+	var __pos = new vec2(x,y);
+	
+	for (var i = 0; i < array_length(_array); i ++ ) {
+		var __other = _array[i];
+		_vec_to = vector_subtract(__pos, new vec2(__other.x,__other.y));
+		var _dist = min(_vec_to.get_magnitude(), _range);
+		var _scale = (1 - (_dist/_range));
+		_vec_to.Multiply(_scale);
+		_vec.Add(_vec_to);
+		_count += 1;
+	}
+	
+	if (_count > 0) {
+		_vec.set_magnitude(_power);
+	}
+	
+	return _vec;
+
+}
 #endregion
