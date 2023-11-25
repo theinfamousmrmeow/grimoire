@@ -386,6 +386,14 @@ return _text_wrapped;
 
 #region Math
 
+//map a value from one range to another
+function map_value(_value, _current_lower_bound, _current_upper_bound, _desired_lowered_bound, _desired_upper_bound) {
+	return (((_value - _current_lower_bound) / (_current_upper_bound - _current_lower_bound)) * (_desired_upper_bound - _desired_lowered_bound)) + _desired_lowered_bound;
+}
+
+function modulo(_a, _b) {
+	return (((_a % _b) + _b) % _b);
+}
 ///@desc irandom_range, but exclusive.
 function irandom_between(_x,_y){
 	if (_x + 1 > _y-1){show_error("irandom between can't work, no exclusive range possibile",true);}
@@ -405,16 +413,7 @@ function is_odd(_n){
 }
 
 function approach(_a,_b,_amount){
-	/// Approach(a, b, amount)
-	// Moves "a" towards "b" by "amount" and returns the result
-	// Nice bcause it will not overshoot "b", and works in both directions
-	// Examples:
-	//      speed = Approach(speed, max_speed, acceleration);
-	//      hp = Approach(hp, 0, damage_amount);
-	//      hp = Approach(hp, max_hp, heal_amount);
-	//      x = Approach(x, target_x, move_speed);
-	//      y = Approach(y, target_y, move_speed);
- 
+
 	if (_a< _b)
 	{
 	    _a+= _amount;
@@ -2059,6 +2058,10 @@ function VerletStick(_p1, _p2, _length=undefined) constructor {
         endPoint.pos = vector_subtract(__stickCenter, __stickDir);
       }
     }
+	
+	get_stretched_length = function(){
+		return point_distance(startPoint.pos.x,startPoint.pos.y,endPoint.pos.x,endPoint.pos.y);
+	}
 
 	constrain = function(){
 		
@@ -2066,8 +2069,71 @@ function VerletStick(_p1, _p2, _length=undefined) constructor {
 	
 	render = function(){
 		draw_line_width_color(startPoint.pos.x,startPoint.pos.y,endPoint.pos.x,endPoint.pos.y,stiffness,color,c_dkgray);
-	}	
+	}
+}
+
+#endregion
+
+#region 3D Math Nonsense
+function coordinate_2d_to_3d(_x, _y, _view_mat, _proj_mat, _zoffset = 0){
+	var V = _view_mat;
+	var P = _proj_mat;
+
+	var mx = 2 * (_x / window_get_width() - .5) / P[0];
+	var my = -2 * (_y / window_get_height() - .5) / P[5];
+	var camX = - (V[12] * V[0] + V[13] * V[1] + V[14] * V[2]);
+	var camY = - (V[12] * V[4] + V[13] * V[5] + V[14] * V[6]);
+	var camZ = - (V[12] * V[8] + V[13] * V[9] + V[14] * V[10]) + _zoffset;
+
+	if (P[15] == 0)
+	{    //This is a perspective projection
+	    return [V[2]  + mx * V[0] + my * V[1],
+	            V[6]  + mx * V[4] + my * V[5],
+	            V[10] + mx * V[8] + my * V[9],
+	            camX,
+	            camY,
+	            camZ];
+	}
+	else
+	{    //This is an ortho projection
+	    return [V[2],
+	            V[6],
+	            V[10],
+	            camX + mx * V[0] + my * V[1],
+	            camY + mx * V[4] + my * V[5],
+	            camZ + mx * V[8] + my * V[9]];
+	}
+}
+
+function mouse_position_3d_get(_camera=view_camera[view_current]){
+	var _x = window_mouse_get_x()
+	var _y = window_mouse_get_y()
 	
+	var _viewMat = camera_get_view_mat(_camera);
+	var _projMat = camera_get_proj_mat(_camera);
+	var _camW = camera_get_view_width(_camera) * 2;
+	var _camH = camera_get_view_height(_camera) * 2;
+	var __mouse_ray = coordinate_2d_to_3d(_x,_y,_viewMat,_projMat,0);
+	var P = _projMat;
+	var mouseX = __mouse_ray[3] + (_camW * __mouse_ray[0]);
+	var mouseY = __mouse_ray[4] + (_camH *__mouse_ray[1]);
+	
+	mouseX = __mouse_ray[3] //+ (_camW * __mouse_ray[0]);
+	mouseY = __mouse_ray[4] //+ (__mouse_ray[1]);
+
+	var s2w = __mouse_ray;
+
+	var fx = s2w[0] * s2w[5] / -s2w[2] + s2w[3];
+	var fy = s2w[1] * s2w[5] / -s2w[2] + s2w[4];
+	
+	var __pos = {
+	
+		x: fx,
+		y: fy
+	
+	}
+	
+	return __pos;
 }
 
 #endregion
@@ -2267,6 +2333,23 @@ function force_arrive(_x,_y,_slowing_radius=64,_force=0.1,_max_magnitude=0.5){
 	return _vec;
 }
 
+function force_margins(_x,_y,_left,_right,_top,_bottom,_force=1){
+	var _vec = new vector_zero();
+	if _x < _left{
+	    _vec.x = _force;
+	}
+	if _x > _right{
+	    _vec.x = -_force;
+	}
+	if _y > _bottom{
+	    _vec.y = -_force;
+	}
+	if _y < _top {
+	    _vec.y = _force;
+	}
+	return _vec;
+}
+
 #macro WANDER_DISTANCE 10
 #macro WANDER_CHANGE 2
 #macro WANDER_POWER 2
@@ -2284,6 +2367,12 @@ function force_wander(_max_magnitude=1,_heading_change = WANDER_CHANGE) {
 
 	return _vec;
 
+}
+
+function force_wander_perlin(_heading,_perlin_index,_wander_scale=1,_force=3){
+	var __angle = (perlin_noise(_perlin_index) * _wander_scale) + _heading;
+	var __vec = new vector_lengthdir(_force,__angle);
+	return __vec;
 }
 
 /**
@@ -2315,4 +2404,151 @@ function force_separation_list(_array,_power = 0.75,_range=1000) {
 	return _vec;
 
 }
+
+function force_alignment_array(_array,_force = 0.75){
+	var __vec_to;
+	var __vec = new vector_zero();
+	var __count = 0;
+	var __pos = new vec2(x,y);
+	
+	for (var i = 0; i < array_length(_array); i ++ ) {
+		var __other = _array[i];
+		var __velocity = new vec2(__other.hspeed,__other.vspeed);
+		__vec.Add(__velocity);
+		__count++;
+	}
+	
+	if (__count>0){
+		__vec.set_magnitude(_force);	
+	}
+	
+	return __vec;
+}
+
+function force_cohesion_array(_array,_force = 0.2){
+	var __vec_to;
+	var __vec = new vector_zero();
+	var __count = 0;
+	//var __pos = new vec2(x,y);
+	
+	for (var i = 0; i < array_length(_array); i ++ ) {
+		var __other = _array[i];
+		var __pos = new vec2(__other.x,__other.y);
+		__vec.Add(__pos);
+		__count++;
+	}
+	
+	if (__count>0){
+		__vec.Divide(__count);
+		__vec = force_seek(__vec.x,__vec.y,_force);
+	}
+	
+	return __vec;
+}
+
+
+#endregion
+
+#region NOISE
+
+//From https://github.com/samspadegamedev/YouTube-Perlin-Noise-Public/blob/main/scripts/perlin_noise_script_functions/perlin_noise_script_functions.gml
+function perlin_noise(_x, _y = 100.213, _z = 450.4215) {
+	
+	#region //doubled perm table
+	static _p = [
+		151,160,137,91,90,15,
+		131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+		190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+		88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+		77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+		102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+		135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+		5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+		223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+		129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+		251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+		49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+		138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
+		151,160,137,91,90,15,
+		131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+		190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+		88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+		77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+		102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+		135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+		5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+		223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+		129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+		251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+		49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+		138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
+	];
+	#endregion
+
+    static _fade = function(_t) {
+        return _t * _t * _t * (_t * (_t * 6 - 15) + 10);
+    }
+
+	static _lerp = function(_t, _a, _b) { 
+		return _a + _t * (_b - _a); 
+	}
+
+    static _grad = function(_hash, _x, _y, _z) {
+        var _h, _u, _v;
+        _h = _hash & 15;                       // CONVERT 4 BITS OF HASH CODE
+        _u = (_h < 8) ? _x : _y;                 // INTO 12 GRADIENT DIRECTIONS.
+        if (_h < 4) {
+            _v = _y;
+        } else if ((_h == 12) || (_h == 14)) {
+            _v = _x;
+        } else {
+            _v = _z;
+        }
+		if ((_h & 1) != 0) {
+			_u = -_u;
+		}
+		if ((_h & 2) != 0) {
+			_v = -_v;
+		}		
+        return _u + _v;
+    }
+
+    var _X, _Y, _Z;
+    _X = floor(_x);
+    _Y = floor(_y);
+    _Z = floor(_z);
+    
+    _x -= _X;
+    _y -= _Y;
+    _z -= _Z;
+    
+    _X = _X & 255;
+    _Y = _Y & 255;
+    _Z = _Z & 255;
+    
+    var _u, _v, _w;
+    _u = _fade(_x);
+    _v = _fade(_y);
+    _w = _fade(_z);
+    
+    var A, AA, AB, B, BA, BB;
+    A  = _p[_X]+_Y;
+    AA = _p[A]+_Z;
+    AB = _p[A+1]+_Z;
+    B  = _p[_X+1]+_Y;
+    BA = _p[B]+_Z;
+    BB = _p[B+1]+_Z;
+
+	//returns a number between -1 and 1
+    return _lerp(_w, _lerp(_v, _lerp(_u,_grad(_p[AA  ], _x  , _y  , _z   ),  // AND ADD
+										_grad(_p[BA  ], _x-1, _y  , _z   )), // BLENDED
+                             _lerp(_u,	_grad(_p[AB  ], _x  , _y-1, _z   ),  // RESULTS
+										_grad(_p[BB  ], _x-1, _y-1, _z   ))),// FROM  8
+                    _lerp(_v, _lerp(_u,	_grad(_p[AA+1], _x  , _y  , _z-1 ),  // CORNERS
+										_grad(_p[BA+1], _x-1, _y  , _z-1 )), // OF CUBE
+                             _lerp(_u,	_grad(_p[AB+1], _x  , _y-1, _z-1 ),
+										_grad(_p[BB+1], _x-1, _y-1, _z-1 )))); 
+
+}
+	
 #endregion
