@@ -2489,7 +2489,8 @@ function context_steering(_array,_vec,_weight = 0.5){
 		if (__result>0){
 			_array[i]+=(__result * _weight);   
 		}
-	}	
+	}
+	return _array;
 }
 
 function context_steering_compose(_array_decision){
@@ -2498,7 +2499,7 @@ function context_steering_compose(_array_decision){
 	var __dir_step = (360 / __directions)
 	for (var i = 0; i < __directions; ++i) {	
 		var __output_force = _array_decision[i];
-		var __vec_direction = new vector_lengthdir(forces_decision[i],__dir_step * i);
+		var __vec_direction = new vector_lengthdir(__output_force,__dir_step * i);
 		_decision_direction.Add(__vec_direction);
 	}
 	return _decision_direction;
