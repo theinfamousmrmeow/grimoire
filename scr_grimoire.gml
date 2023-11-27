@@ -925,6 +925,22 @@ function setting_get_string(_section,_key,_value=undefined) {
 #endregion
 #region ARRAYS
 
+function arrays_difference(_a,_b){
+	var __output = array_create(array_length(_a),0);
+	for (var i = 0; i < array_length(_a); ++i) {	
+		__output[i] = _a[i] - _b[i];
+	}
+	return __output;
+}
+
+function arrays_sum(_a,_b){
+	var __output = array_create(array_length(_a),0);
+	for (var i = 0; i < array_length(_a); ++i) {	
+		__output[i] = _a[i] + _b[i];
+	}
+	return __output;
+}
+
 function array_to_ds_list(_arr){
 	var __arr = _arr
 	var __list = ds_list_create()
@@ -1473,6 +1489,20 @@ function draw_text_color_bold(_x,_y,_string,_scale,_sep,_width,_c,_a){
 }
 
 #region tiles and tilesets
+
+function tilemap_foreach(_tilemap,_func,_executeOnEmpty=false){
+	var __rows = tilemap_get_height(_tilemap);
+	var __columns = tilemap_get_width(_tilemap);
+	for (var __x=0; __x<__columns;__x++){
+		for (var __y=0;__y<__rows;__y++){
+			var __tile = tilemap_get(_tilemap,__x,__y);
+			if (__tile==0 && !_executeOnEmpty) continue;
+			if (__tile>=0){
+				_func(__x,__y,__tile);	
+			}
+		}
+	}
+}
 
 function tileset_get_count(_ts_asset){
 	return tileset_get_info(_ts_asset).tile_count	
@@ -2174,7 +2204,7 @@ function raycast(_startx,_starty,_endx,_endy,_stepSize,func){
 	for (var i = 0; i < __steps; ++i) {
 	   __x += __xdif;
 	   __y += __ydif;  
-	   var __return = func(__x,__y);
+	   var __return = func(__x,__y,_stepSize * i);
 	   if (__return!=undefined) return __return;
 	}
 	return -1;//Means nothing happened, essentially;
@@ -2446,6 +2476,33 @@ function force_cohesion_array(_array,_force = 0.2){
 	return __vec;
 }
 
+
+#endregion
+
+#region CONTEXT STEERING
+function context_steering(_array,_vec,_weight = 0.5){
+	var __directions = array_length(_array);
+	var __direction_step = (360 / __directions);
+	for (var i = 0; i < array_length(_array); ++i) {
+		var __direction_bucket = new vector_lengthdir(1,i * __direction_step);
+		var __result = dot_product_normalized(_vec.x,_vec.y,__direction_bucket.x,__direction_bucket.y);
+		if (__result>0){
+			_array[i]+=(__result * _weight);   
+		}
+	}	
+}
+
+function context_steering_compose(_array_decision){
+	var _decision_direction = new vector_zero();
+	var __directions = array_length(_array_decision)
+	var __dir_step = (360 / __directions)
+	for (var i = 0; i < __directions; ++i) {	
+		var __output_force = _array_decision[i];
+		var __vec_direction = new vector_lengthdir(forces_decision[i],__dir_step * i);
+		_decision_direction.Add(__vec_direction);
+	}
+	return _decision_direction;
+}
 
 #endregion
 
