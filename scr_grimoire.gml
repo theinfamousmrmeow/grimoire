@@ -2380,10 +2380,6 @@ function force_margins(_x,_y,_left,_right,_top,_bottom,_force=1){
 	return _vec;
 }
 
-#macro WANDER_DISTANCE 10
-#macro WANDER_CHANGE 2
-#macro WANDER_POWER 2
-
 function force_wander(_max_magnitude=1,_heading_change = WANDER_CHANGE) {
 
 	var _vec = new vec2(hspeed,vspeed);
