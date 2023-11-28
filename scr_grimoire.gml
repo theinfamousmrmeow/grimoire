@@ -2396,7 +2396,7 @@ function force_wander(_max_magnitude=1,_heading_change = WANDER_CHANGE) {
 }
 
 function force_wander_perlin(_heading,_perlin_index,_wander_scale=1,_force=3){
-	var __angle = (perlin_noise(_perlin_index) * _wander_scale) + _heading;
+	var __angle = (perlin_noise_faux(_perlin_index) * _wander_scale) + _heading;
 	var __vec = new vector_lengthdir(_force,__angle);
 	return __vec;
 }
@@ -2506,7 +2506,7 @@ function context_steering_compose(_array_decision){
 #region NOISE
 
 //From https://github.com/samspadegamedev/YouTube-Perlin-Noise-Public/blob/main/scripts/perlin_noise_script_functions/perlin_noise_script_functions.gml
-function perlin_noise(_x, _y = 100.213, _z = 450.4215) {
+function perlin_noise_faux(_x, _y = 100.213, _z = 450.4215) {
 	
 	#region //doubled perm table
 	static _p = [
