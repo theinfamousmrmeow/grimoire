@@ -391,8 +391,36 @@ function map_value(_value, _current_lower_bound, _current_upper_bound, _desired_
 	return (((_value - _current_lower_bound) / (_current_upper_bound - _current_lower_bound)) * (_desired_upper_bound - _desired_lowered_bound)) + _desired_lowered_bound;
 }
 
-function modulo(_a, _b) {
-	return (((_a % _b) + _b) % _b);
+function modulo(_dividend, _divisor) {
+	#region notes
+	/* 
+		This is written due to gameMaker's mod function not underflowing properly. As in: -1 % 3 = -1 instead of 2
+		Example 1:
+			modulo(-1, 3)
+			
+			_remainder = -1 % 3
+			_remainder = -1
+			
+			return _remainder + _divisor
+			return -1 + 3
+			return 2
+			
+		Example 2:
+			modulo(-5, 3)
+			
+			_remainder = -5 % 3
+			_remainder = -2
+			
+			return _remainder + _divisor
+			return -2 + 3
+			return 1
+		
+	*/
+	#endregion
+	var _remainder  = _dividend % _divisor;
+	return (_remainder < 0) 
+		? _remainder + _divisor 
+		: _remainder
 }
 ///@desc irandom_range, but exclusive.
 function irandom_between(_x,_y){
@@ -2029,6 +2057,8 @@ function sequence_copy_html5(_seq){
  * @param {number} _y - The initial y-coordinate of the VerletDot.
  * @constructor
  */
+ 
+
 function VerletDot(_x,_y) constructor {
 	pos = new vec2(_x, _y);
 	oldpos = new vec2(_x, _y);
@@ -2101,6 +2131,52 @@ function VerletStick(_p1, _p2, _length=undefined) constructor {
 		draw_line_width_color(startPoint.pos.x,startPoint.pos.y,endPoint.pos.x,endPoint.pos.y,stiffness,color,c_dkgray);
 	}
 }
+
+//Special Shapes
+function VerletRectangle(_x,_y,_width,_height) {
+	var __width = _width;
+	var __height = _height;
+	var __x = _x;
+	var __y = _y;
+	var __dots = [];
+	var __sticks = [];
+	
+	// forming a BOX
+	array_push(__dots, new VerletDot(__x + __width, __y + __height)); // x, y, vx, vy
+	array_push(__dots, new VerletDot(__x + (__width*2), __y + __height));
+	array_push(__dots, new VerletDot(__x + (__width*2), __y + (__height*2)));
+	array_push(__dots, new VerletDot(__x + __width, __y + (__height*2)));
+	
+	
+	array_push(__sticks, new VerletStick(__dots[0], __dots[1]))
+	array_push(__sticks, new VerletStick(__dots[1], __dots[2]))
+	array_push(__sticks, new VerletStick(__dots[2], __dots[3]))
+	array_push(__sticks, new VerletStick(__dots[3], __dots[0]))
+	array_push(__sticks, new VerletStick(__dots[3], __dots[1]))
+
+	return {
+		dots: __dots,
+		sticks: __sticks
+	}
+}
+
+function VerletRope(_x,_y,_count,_length){
+	var __dots = [];
+	var __sticks = [];	
+	
+	// forming a Rope
+	for (var i = 0; i < _count; ++i) {
+		array_push(__dots, new VerletDot(_x + (i * _length), _y));
+		if (i>0){
+			array_push(__sticks, new VerletStick(__dots[i-1], __dots[i]))	
+		}
+	}
+	return {
+		dots: __dots,
+		sticks: __sticks
+	} 
+}
+ 
 
 #endregion
 
