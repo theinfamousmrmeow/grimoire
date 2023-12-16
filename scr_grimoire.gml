@@ -728,6 +728,14 @@ function instance_nearest_n() {
 	return nearest;
 }
 
+function instance_direction(_id){
+	return (point_direction(x,y,_id.x,_id.y));
+}
+
+function instance_distance(_id){
+	return (point_distance(x,y,_id.x,_id.y));
+}
+
 function instance_nearest_faction(_x,_y,_faction){
 	
 	//var __arrayOfResults = array_create(1,0);
