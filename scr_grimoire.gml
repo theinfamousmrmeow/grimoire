@@ -513,16 +513,6 @@ function angle_reflect_y(_angle){
 	return point_direction(0,0,_x,_y)
 }
 
-
-function angle_between(_angle,_angle1,_angle2){
-		
-}
-
-
-function instance_direction(_id){
-	return (point_direction(x,y,_id.x,_id.y));
-}
-
 #endregion
 
 #region Probability
