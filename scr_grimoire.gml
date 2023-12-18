@@ -513,6 +513,16 @@ function angle_reflect_y(_angle){
 	return point_direction(0,0,_x,_y)
 }
 
+function angle_in_cone(_angle,_cone_angle,_cone_width){
+	var __diff = angle_difference(_angle,_cone_angle);
+	return (abs(__diff)<=_cone_width/2);
+}
+
+function point_in_cone(_x,_y,_cone_x,_cone_y,_cone_angle,_cone_width,_cone_length){
+	var __angle = point_direction(_cone_x,_cone_y,_x,_y);
+	return angle_in_cone(__angle,_cone_angle,_cone_width) && point_distance(_cone_x,_cone_y,_x,_y)<=_cone_length;
+}
+
 #endregion
 
 #region Probability
