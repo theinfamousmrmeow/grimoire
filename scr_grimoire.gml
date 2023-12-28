@@ -736,13 +736,13 @@ function instance_distance(_id){
 	return (point_distance(x,y,_id.x,_id.y));
 }
 
-function instance_nearest_faction(_x,_y,_faction){
+function instance_nearest_faction(_x,_y,_faction,_object_index=obj_agent){
 	
 	//var __arrayOfResults = array_create(1,0);
 	var __currentDist = infinity;
 	var __result = -1;
 	
-	with (obj_agent){
+	with (_object_index){
 		if (faction!=_faction){
 			var __dist = point_distance(x,y,_x,_y);
 			if (__dist<__currentDist){
