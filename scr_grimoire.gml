@@ -2188,6 +2188,66 @@ function VerletRope(_x,_y,_count,_length){
 
 #endregion
 
+#region ROOM TO GUI COORDINATE CONVERSION STUFF
+function gui_x_to_room(_coord){
+	var cw = camera_get_view_width(view_camera);
+	var px = _coord / display_get_gui_width()
+	var cx = camera_get_view_x(view_camera);
+
+	var xx = cx+(px * cw);
+
+	return xx
+}
+
+function gui_y_to_room(_coord){
+	var ch = camera_get_view_height(view_camera);
+	var ph = _coord / display_get_gui_height()
+	var ch = camera_get_view_y(view_camera);
+
+	var yy = ch+(ph * ch);
+
+	return yy
+}
+
+///@desc needs testing
+function room_x_to_gui(_x){
+        var cl = camera_get_view_x(view_camera[0])
+      
+        var off_x = _x - cl // x is the normal x position
+      
+        // convert to gui
+        var off_x_percent = off_x / camera_get_view_width(view_camera[0])
+      
+        var gui_x = off_x_percent * display_get_gui_width()
+
+		return gui_x;
+}
+
+///@desc needs testing
+function room_y_to_gui(_y){
+        var ct = camera_get_view_y(view_camera[0])
+      
+        var off_y = _y - ct // y is the normal y position
+      
+        // convert to gui
+        var off_y_percent = off_y / camera_get_view_height(view_camera[0])
+      
+        var gui_y = off_y_percent * display_get_gui_height()
+		return gui_y;
+}
+
+
+/// @desc Converts x,y in game world to gui x,y
+/// @param {real} _x x position in game world
+/// @param {real} _y y position in game world
+/// @returns {array<Real>} array contains x,y position in gui
+function worldxy_to_guixy(_x, _y){
+	return [room_x_to_gui(_x),room_y_to_gui(_y)];
+}
+
+#endregion 
+
+
 #region 3D Math Nonsense
 function coordinate_2d_to_3d(_x, _y, _view_mat, _proj_mat, _zoffset = 0){
 	var V = _view_mat;
