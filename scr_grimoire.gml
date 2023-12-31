@@ -226,7 +226,42 @@ function draw_stacked_sprite_ext() {
 
 }
 
+/// draw_sprite_tiled_area_ext(sprite,subimg,x,y,x1,y2,x2,y2,color,alpha)
+//
+//  Draws a repeated sprite image, tiled to fill a given region and with
+//  a given offset. 
+function draw_sprite_tiled_area_ext(_sprite,_subimage,_xx,_yy,_x1,_y1,_x2,_y2,_color,_alpha) {
 
+    var __sprite_width,__sprite_height,__i,__j,__jj,__left,__top,__width,__height,X,Y;
+    __sprite_width = sprite_get_width(_sprite);
+    __sprite_height = sprite_get_height(_sprite);
+ 
+    __i = _x1 - ((_x1 mod __sprite_width)-(_xx mod __sprite_width)) - __sprite_width*((_x1 mod __sprite_width)<(_xx mod __sprite_width));
+    __j = _y1 - ((_y1 mod __sprite_height)-(_yy mod __sprite_height)) - __sprite_height*((_y1 mod __sprite_height)<(_yy mod __sprite_height)); 
+    __jj = __j;
+ 
+    for(__i=i; __i<=_x2; __i+=sw) {
+        for(__j=j ;__j<=_y2; __j+=sh) {
+ 
+            if(__i <= _x1) __left = _x1-__i;
+            else __left = 0;
+            X = __i+__left;
+ 
+            if(__j <= _y1)__top = _y1-__j;
+            else __top = 0;
+            Y = __j+__top;
+ 
+            if(_x2 <= __i+__sprite_width) __width = ((__sprite_width)-(__i+__sprite_width-_x2)+1)-__left;
+            else __width = __sprite_width-__left;
+ 
+            if(_y2 <= __j+__sprite_height) __height = ((__sprite_height)-(__j+__sprite_height-_y2)+1)-__top;
+            else __height = __sprite_height-__top;
+ 
+            draw_sprite_part_ext(_sprite,_subimage,__left,__top,__width,__height,X,Y,1,1,_color,_alpha);
+        }
+        __j = __jj;
+    }
+}
 #endregion
 
 #region masks/bounding boxes
