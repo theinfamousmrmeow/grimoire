@@ -240,8 +240,8 @@ function draw_sprite_tiled_area_ext(_sprite,_subimage,_xx,_yy,_x1,_y1,_x2,_y2,_c
     __j = _y1 - ((_y1 mod __sprite_height)-(_yy mod __sprite_height)) - __sprite_height*((_y1 mod __sprite_height)<(_yy mod __sprite_height)); 
     __jj = __j;
  
-    for(__i=i; __i<=_x2; __i+=sw) {
-        for(__j=j ;__j<=_y2; __j+=sh) {
+    for(__i=__i; __i<=_x2; __i+=__sprite_width) {
+        for(__j=__j ;__j<=_y2; __j+=__sprite_height) {
  
             if(__i <= _x1) __left = _x1-__i;
             else __left = 0;
@@ -2509,16 +2509,25 @@ function force_flee(_x,_y,_weight=1){
 	return _vec;
 }
 
-function force_pursue(_target,_force=0.1,_max_magnitude=0.5){
-	var _vec = new vec2(_target.hspeed,_target.vspeed);
-	_vec.Multiply(6);
-	_vec.Add(new vec2(_target.x,_target.y));
-	return seek_force(_vec.x,_vec.y,_force,_max_magnitude);
+function force_direction(_direction,_weight=1){
+	var __len = 1;
+	var __x = lengthdir_x(__len,_direction);
+	var __y = lengthdir_y(__len,_direction);
+	var _vec = new vec2(__x,__y);
+	_vec.set_magnitude(_weight);
+	return _vec;
 }
 
-function force_evade(_target,_force=0.1,_max_magnitude=0.5){
+function force_pursue(_target,_prediction=6,_force=0.1,_max_magnitude=0.5){
 	var _vec = new vec2(_target.hspeed,_target.vspeed);
-	_vec.Multiply(6);
+	_vec.Multiply(_prediction);
+	_vec.Add(new vec2(_target.x,_target.y));
+	return force_seek(_vec.x,_vec.y,_force,_max_magnitude);
+}
+
+function force_evade(_target,_prediction=6,_force=0.1,_max_magnitude=0.5){
+	var _vec = new vec2(_target.hspeed,_target.vspeed);
+	_vec.Multiply(_prediction);
 	_vec.Add(new vec2(_target.x,_target.y));
 	return force_flee(_vec.x,_vec.y,_force,_max_magnitude);
 }
