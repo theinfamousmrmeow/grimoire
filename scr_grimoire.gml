@@ -2794,3 +2794,68 @@ function perlin_noise_faux(_x, _y = 100.213, _z = 450.4215) {
 }
 	
 #endregion
+
+#region MOTION
+
+function motion_init(_friction=0){
+	motion_direction = 0;
+	motion_speed = 0;
+	motion_friction = _friction;
+}
+
+function motion_tick(_collision_handler){
+	_collision_handler.spdDir(motion_speed,motion_direction);
+	motion_speed = approach(motion_speed,0,motion_friction);
+}
+
+function motion_set_friction(_friction){
+	motion_friction = _friction;
+}
+
+function motion_get_friction(){
+	return motion_friction;
+}
+
+function motion_set_direction(_direction){
+	motion_direction = _direction;	
+}
+
+function motion_set_speed(_speed){
+	motion_speed = _speed;	
+}
+
+function motion_accelerate(_speed){
+	motion_speed += _speed;	
+}
+
+function motion_get_speed(){
+	return motion_speed;	
+}
+
+function motion_get_direction(){
+	return motion_direction;	
+}
+
+function motion_get_lengthdir(){
+	return new vector_lengthdir(motion_get_speed(),motion_get_direction());	
+}
+
+function motion_get_xy(){
+	var __x = lengthdir_x(motion_speed,motion_direction);
+	var __y = lengthdir_y(motion_speed,motion_direction);
+	return (new vec2(__x,__y));
+}
+
+function motion_vector_add(_speed,_direction){
+
+	var _v1 = motion_get_xy();
+	var _v2 = new vector_lengthdir(_speed,_direction);
+	_v1.Add(_v2);
+	var __dir = point_direction(0,0,_v1.x,_v1.y);
+	motion_set_direction(__dir);
+	motion_set_speed(_v1.get_magnitude());
+	if (motion_get_speed()>1000){
+		show_message("We moving too fast");
+	}
+}
+#endregion
