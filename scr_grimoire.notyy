@@ -1,0 +1,13 @@
+{
+  "$GMScript":"",
+  "%Name":"scr_grimoire",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_grimoire",
+  "parent":{
+    "name":"tome",
+    "path":"tome.yyp",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
