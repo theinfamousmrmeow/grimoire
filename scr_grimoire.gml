@@ -956,6 +956,40 @@ function setting_get_string(_section,_key,_value=undefined) {
 
 #endregion
 
+#region Cheats
+
+function init_cheats(){
+    global.cheats = ds_map_create();
+}
+
+function cheat_enabled(_cheatName){
+    var __val = global.cheats[? _cheatName];
+    return (__val != undefined && __val == true);
+}
+
+function cheat_enable(_cheatName){
+    global.cheats[? _cheatName] = true;
+}
+
+function cheat_disable(_cheatName){
+    global.cheats[? _cheatName] = false;
+}
+
+function cheat_toggle(_cheatName){
+    if (cheat_enabled(_cheatName)){
+        cheat_disable(_cheatName);
+    }
+    else {
+        cheat_enable(_cheatName);
+    }
+}
+
+function cheat_set(_cheatName,_value){
+     global.cheats[? _cheatName] = _value;
+}
+
+#endregion
+
 #region UNLOCKS/PROGRESS
 
 	function ini_set(_file,_section,_key,_value) {
