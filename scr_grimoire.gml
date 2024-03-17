@@ -101,7 +101,7 @@
 
 #region SHARED DATA STRUCTURES
 ds_list_create();
-#macro LIST 0
+#macro DEFAULT_LIST 0
 
 #endregion
 
