@@ -621,7 +621,7 @@ function poisson_circle(_x,_y,_radius,_cellSize,_points_needed){
         
         
 		var __dir = random(360);
-		var __len = random(_cellSize);
+		var __len = random(_radius);
 		
 		var xx= (_x + lengthdir_x(__len,__dir));
         var yy= (_y + lengthdir_y(__len,__dir));
