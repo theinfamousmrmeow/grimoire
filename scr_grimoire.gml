@@ -920,36 +920,105 @@ function instance_nearest_tag(_x,_y,_tag){
 #region Settings
 
 
+function _setting_already_set(_section,_key,_value=undefined){
+	if (!variable_global_exists("settings_map")){
+		global.settings_map = ds_map_create();
+		return false;
+	}
+	if (!ds_map_exists(global.settings_map,_section)) return false;
+	var __section_map = global.settings_map[? _section];
+	if (!ds_map_exists(__section_map,_key)) return false;
+	if (_value != global.settings_map[? _section][? _key]){
+		if (!is_undefined(_value))
+		{
+			global.settings_map[? _section][? _key] = _value;
+			return false;
+		}
+	}
+	return true;
+}
+
+function _setting_already_gotten(_section,_key){
+	return (_setting_already_set(_section,_key,undefined))
+}
+
+function _setting_cache_set(_section,_key,_value){
+	if (!variable_global_exists("settings_map")){
+		global.settings_map = ds_map_create();
+	}
+	var __section = ds_map_find_value(global.settings_map,_section)
+	if (is_undefined(__section)) {
+		var __section_map = ds_map_create();
+		ds_map_add_map(global.settings_map,_section,__section_map)
+	}
+	global.settings_map[? _section][? _key] = _value;
+}
+
+function setting_set(_section, _key, _value) {
+	if (is_real(_value)){
+		return setting_set_real(_section,_key,_value);
+	}
+	else {
+		return setting_set_string(_section,_key,_value);
+	}
+}
+
+function setting_get(_section,_key,_value){
+	if (is_real(_value)){
+		return setting_get_real(_section,_key,_value);
+	}
+	else {
+		return setting_get_string(_section,_key,_value);
+	}
+}
+
 function setting_set_real(_section, _key, _value) {
+	
+	if (_setting_already_set(_section,_key,_value)) return;
+	
 	ini_open("settings.ini");
 	ini_write_real(_section,_key,_value);
 	ini_close();
+	_setting_cache_set(_section,_key,_value);
+	
 }
 
 function setting_set_string(_section, _key, _value) {
+	
+	if (_setting_already_set(_section,_key,_value)) return;
+	
 	ini_open("settings.ini");
 	ini_write_string(_section,_key,_value);
 	ini_close();
+	_setting_cache_set(_section,_key,_value);
 }
 
 function setting_get_real(_section,_key,_value=undefined) {
+
+	if (_setting_already_gotten(_section,_key)) return global.settings_map[? _section][? _key];
 
 	ini_open("settings.ini");
 
 	var __thing = ini_read_real(_section,_key,_value);
 
 	ini_close();
+
+	_setting_cache_set(_section,_key,__thing);
 
 	return __thing;
 }
 
 function setting_get_string(_section,_key,_value=undefined) {
 
+	if (_setting_already_gotten(_section,_key)) return global.settings_map[? _section][? _key];
+
 	ini_open("settings.ini");
 
 	var __thing = ini_read_real(_section,_key,_value);
 
 	ini_close();
+
+	_setting_cache_set(_section,_key,__thing);
 
 	return __thing;
 }
