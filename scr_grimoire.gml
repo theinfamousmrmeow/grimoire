@@ -110,12 +110,23 @@ ds_list_create();
 #macro SECONDS_TO_MILLISECONDS 1000
 
 function timer(_seconds,_callback,_args=[]){
-	//TODO: Since these aren't tied to a time_source, they can't be paused.  wtf to do.
-	//https://trello.com/c/dhdZmE0B/281-todo-timers-cant-be-tied-to-a-time-source-now-what-do
-	return call_later(_seconds,time_source_units_seconds,_callback);
-	//__i = time_source_create(time_source_game,_seconds,time_source_units_seconds,_callback,_args);
-	//time_source_start(__i);
-	//return __i;
+	
+	//Make args an array if we passed in a value
+	if (!is_array(_args)){
+		_args = [_args];	
+	}
+	
+	//Build context struct
+	context = {
+		callback: _callback,
+		args: _args
+	}
+	//Wrap context into an outer callback
+	__outer_callback = function(){
+		method_call(self.callback, self.args);
+	}
+	var __method = method(context,__outer_callback);
+	return call_later(_seconds,time_source_units_seconds,__method);
 }
 
 #endregion
@@ -321,9 +332,7 @@ function view_left(_view){
 #region STRINGS
 ///@param StringToBeSplit
 ///@param delimiter
-function splitString(){
-	var str = _arg0; //string to split
-	var delimiter = _arg1; //string to split the first string by
+function splitString(str,delimiter){
 	var slot = 0;
 	var strings=undefined; //array to hold all strings we have split
 	var workingStr = ""; //uses a working array to hold the delimited data we're currently looking at
