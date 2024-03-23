@@ -2971,3 +2971,42 @@ function motion_vector_add(_speed,_direction){
 	}
 }
 #endregion
+
+#region PARTICLES
+
+
+/// Retrieves a specific particle type from a particle system asset.
+/// 
+/// @param _particle_system_asset_id The ID of the particle system asset.
+/// @param _ind The index of the emitter to retrieve particle type from (optional, default is 0).
+/// @returns The particle type at the specified index.
+function particle_system_get_particle(_particle_system_asset_id,_ind=0){
+	var __emitter = particle_system_get_emitter(_particle_system_asset_id,_ind);
+	var __index = __emitter.parttype.ind;
+	return __index;
+}
+
+/// @desc Retrieves the emitter at the specified index from a particle system asset.
+/// @param _particle_system_asset_id The ID of the particle system asset.
+/// @param _ind The index of the emitter to retrieve (default is 0).
+/// @returns The emitter at the specified index.
+function particle_system_get_emitter(_particle_system_asset_id,_ind=0){
+	var __type = asset_get_type(_particle_system_asset_id);
+	if (__type != asset_particlesystem) {
+		show_debug_message($"Got type {nameof(__type)}, need type asset_particlesystem");
+		return undefined;
+	}
+	var __struct = particle_get_info(_particle_system_asset_id);
+	if (!is_struct(__struct)) {
+		show_debug_message($"Couldn't get a ParticleSystemInfo out of the asset: {_particle_system_asset_id}");
+		return undefined;
+	}
+	//
+	var __emitters = __struct.emitters;
+	var __index = __emitters[_ind];
+	if (_ind == all){
+		__index = __emitters;	
+	}
+	return __index;	
+}
+#endregion
