@@ -161,6 +161,11 @@ function image_single(_image=0){
 	image_speed=0;
 }
 
+function image_randomize(){
+	image_index=irandom(image_number-1);
+	return image_index;
+}
+
 #endregion
 
 ///@desc Changes sprite without changing image_index (like for changing facing during walk anims)
@@ -484,6 +489,14 @@ function is_odd(_n){
 	return !is_even(_n);
 }
 
+/// @function random_wiggle
+/// @description Generates a random wiggle value within the specified width.
+/// @param _width The width of the wiggle range.
+/// @returns The randomly generated wiggle value.
+function random_wiggle(_width){
+	return random(_width)-(_width/2);
+}
+
 function approach(_a,_b,_amount){
 
 	if (_a< _b)
@@ -787,7 +800,7 @@ function instance_nearest_faction(_x,_y,_faction,_object_index=obj_agent){
 	var __result = -1;
 	
 	with (_object_index){
-		if (faction!=_faction){
+		if (faction!=_faction && faction!=undefined){
 			var __dist = point_distance(x,y,_x,_y);
 			if (__dist<__currentDist){
 				__result = id;	
