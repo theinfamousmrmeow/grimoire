@@ -1,4 +1,3 @@
-// If you have any questions, improvements, or requests, let's talk!
 
 #region Input Helpers and Definitions
 
@@ -102,6 +101,8 @@
 #region SHARED DATA STRUCTURES
 ds_list_create();
 #macro DEFAULT_LIST 0
+ds_priority_create();
+#macro DEFAULT_PRIORITY_QUEUE 0
 
 #endregion
 
@@ -110,12 +111,23 @@ ds_list_create();
 #macro SECONDS_TO_MILLISECONDS 1000
 
 function timer(_seconds,_callback,_args=[]){
-	//TODO: Since these aren't tied to a time_source, they can't be paused.  wtf to do.
-	//https://trello.com/c/dhdZmE0B/281-todo-timers-cant-be-tied-to-a-time-source-now-what-do
-	return call_later(_seconds,time_source_units_seconds,_callback);
-	//__i = time_source_create(time_source_game,_seconds,time_source_units_seconds,_callback,_args);
-	//time_source_start(__i);
-	//return __i;
+	
+	//Make args an array if we passed in a value
+	if (!is_array(_args)){
+		_args = [_args];	
+	}
+	
+	//Build context struct
+	context = {
+		callback: _callback,
+		args: _args
+	}
+	//Wrap context into an outer callback
+	__outer_callback = function(){
+		method_call(self.callback, self.args);
+	}
+	var __method = method(context,__outer_callback);
+	return call_later(_seconds,time_source_units_seconds,__method);
 }
 
 #endregion
@@ -148,6 +160,11 @@ function image_even(){
 function image_single(_image=0){
 	image_index=_image;
 	image_speed=0;
+}
+
+function image_randomize(){
+	image_index=irandom(image_number-1);
+	return image_index;
 }
 
 #endregion
@@ -321,9 +338,7 @@ function view_left(_view){
 #region STRINGS
 ///@param StringToBeSplit
 ///@param delimiter
-function splitString(){
-	var str = _arg0; //string to split
-	var delimiter = _arg1; //string to split the first string by
+function splitString(str,delimiter){
 	var slot = 0;
 	var strings=undefined; //array to hold all strings we have split
 	var workingStr = ""; //uses a working array to hold the delimited data we're currently looking at
@@ -475,6 +490,20 @@ function is_odd(_n){
 	return !is_even(_n);
 }
 
+/// @function random_wiggle
+/// @description Generates a random wiggle value within the specified width.
+/// @param _width The width of the wiggle range.
+/// @returns The randomly generated wiggle value.
+function random_wiggle(_width){
+	return random(_width)-(_width/2);
+}
+
+/// @function approach
+/// @description This function calculates the approach value between two numbers.
+/// @param _a The first number.
+/// @param _b The second number.
+/// @param _amount The amount to approach by.
+/// @returns The approach value between _a and _b.
 function approach(_a,_b,_amount){
 
 	if (_a< _b)
@@ -553,10 +582,35 @@ function angle_in_cone(_angle,_cone_angle,_cone_width){
 	return (abs(__diff)<=_cone_width/2);
 }
 
+/// Checks if a point is within a cone-shaped area.
+/// 
+/// @param _x The x-coordinate of the point to check.
+/// @param _y The y-coordinate of the point to check.
+/// @param _cone_x The x-coordinate of the cone's center.
+/// @param _cone_y The y-coordinate of the cone's center.
+/// @param _cone_angle The angle (in degrees) at which the cone is facing.
+/// @param _cone_width The width (in degrees) of the cone's opening.
+/// @param _cone_length The length of the cone.
+/// @return Returns true if the point is within the cone, false otherwise.
 function point_in_cone(_x,_y,_cone_x,_cone_y,_cone_angle,_cone_width,_cone_length){
 	var __angle = point_direction(_cone_x,_cone_y,_x,_y);
 	return angle_in_cone(__angle,_cone_angle,_cone_width) && point_distance(_cone_x,_cone_y,_x,_y)<=_cone_length;
 }
+
+/// Checks if a point is within an arc defined by its center, angle, and width.
+/// 
+/// @param _x The x-coordinate of the point to check.
+/// @param _y The y-coordinate of the point to check.
+/// @param _arc_x The x-coordinate of the arc's center.
+/// @param _arc_y The y-coordinate of the arc's center.
+/// @param _arc_angle The angle of the arc in degrees.
+/// @param _arc_width The width of the arc in degrees.
+/// @returns Returns true if the point is within the arc, false otherwise.
+function point_in_arc(_x,_y,_arc_x,_arc_y,_arc_angle,_arc_width){
+	var __angle = point_direction(_arc_x,_arc_y,_x,_y);
+	return angle_in_cone(__angle,_arc_angle,_arc_width);
+}
+
 
 #endregion
 
@@ -771,6 +825,10 @@ function instance_distance(_id){
 	return (point_distance(x,y,_id.x,_id.y));
 }
 
+function distance_between(_a,_b){
+	return (point_distance(_a.x,_a.y,_b.x,_b.y));
+}
+
 function instance_nearest_faction(_x,_y,_faction,_object_index=obj_agent){
 	
 	//var __arrayOfResults = array_create(1,0);
@@ -778,7 +836,7 @@ function instance_nearest_faction(_x,_y,_faction,_object_index=obj_agent){
 	var __result = -1;
 	
 	with (_object_index){
-		if (faction!=_faction){
+		if (faction!=_faction && faction!=undefined){
 			var __dist = point_distance(x,y,_x,_y);
 			if (__dist<__currentDist){
 				__result = id;	
@@ -915,6 +973,28 @@ function instance_nearest_array(_x,_y,_arrTypes) {
 function instance_nearest_tag(_x,_y,_tag){
 	var _arrTypes = tag_get_asset_ids(_tag,asset_object);
 	return (instance_nearest_array(_x,_y,_arrTypes));
+}
+
+/// @function instances_in_cone
+/// @description Returns the instances within a cone-shaped area.
+/// @param _obj_index The index of the object to check for instances.
+/// @param _x The x-coordinate of the cone's origin.
+/// @param _y The y-coordinate of the cone's origin.
+/// @param _cone_angle The angle of the cone in degrees.
+/// @param _cone_width The width of the cone in degrees.
+/// @param _cone_length The length of the cone.
+/// @returns The number of instances found within the cone.
+function instances_in_cone(_obj_index,_x,_y,_cone_angle,_cone_width,_cone_length){
+	var __array = object_get_instances(_obj_index,true);
+	var __arrayOfResults = array_create(1,0);
+	
+	for (var i=0;i<array_length(__array);i++){
+		var __id = __array[i];
+		if (point_in_cone(__id.x,__id.y,_x,_y,_cone_angle,_cone_width,_cone_length)){
+			array_push(__arrayOfResults,__id);
+		}
+	}
+	return __arrayOfResults;
 }
 
 #region Settings
@@ -2960,5 +3040,44 @@ function motion_vector_add(_speed,_direction){
 	if (motion_get_speed()>1000){
 		show_message("We moving too fast");
 	}
+}
+#endregion
+
+#region PARTICLES
+
+
+/// Retrieves a specific particle type from a particle system asset.
+/// 
+/// @param _particle_system_asset_id The ID of the particle system asset.
+/// @param _ind The index of the emitter to retrieve particle type from (optional, default is 0).
+/// @returns The particle type at the specified index.
+function particle_system_get_particle(_particle_system_asset_id,_ind=0){
+	var __emitter = particle_system_get_emitter(_particle_system_asset_id,_ind);
+	var __index = __emitter.parttype.ind;
+	return __index;
+}
+
+/// @desc Retrieves the emitter at the specified index from a particle system asset.
+/// @param _particle_system_asset_id The ID of the particle system asset.
+/// @param _ind The index of the emitter to retrieve (default is 0).
+/// @returns The emitter at the specified index.
+function particle_system_get_emitter(_particle_system_asset_id,_ind=0){
+	var __type = asset_get_type(_particle_system_asset_id);
+	if (__type != asset_particlesystem) {
+		show_debug_message($"Got type {nameof(__type)}, need type asset_particlesystem");
+		return undefined;
+	}
+	var __struct = particle_get_info(_particle_system_asset_id);
+	if (!is_struct(__struct)) {
+		show_debug_message($"Couldn't get a ParticleSystemInfo out of the asset: {_particle_system_asset_id}");
+		return undefined;
+	}
+	//
+	var __emitters = __struct.emitters;
+	var __index = __emitters[_ind];
+	if (_ind == all){
+		__index = __emitters;	
+	}
+	return __index;	
 }
 #endregion
