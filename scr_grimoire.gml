@@ -2428,31 +2428,13 @@ function gui_y_to_room(_coord){
 	return yy
 }
 
-///@desc needs testing
-function room_x_to_gui(_x){
-        var cl = camera_get_view_x(view_camera[0])
-      
-        var off_x = _x - cl // x is the normal x position
-      
-        // convert to gui
-        var off_x_percent = off_x / camera_get_view_width(view_camera[0])
-      
-        var gui_x = off_x_percent * display_get_gui_width()
-
-		return gui_x;
+function room_y_to_gui(_y, _camera = camera_get_active()) {
+		return (_y-camera_get_view_y(_camera)) * display_get_gui_height() / camera_get_view_height(_camera);
 }
 
 ///@desc needs testing
-function room_y_to_gui(_y){
-        var ct = camera_get_view_y(view_camera[0])
-      
-        var off_y = _y - ct // y is the normal y position
-      
-        // convert to gui
-        var off_y_percent = off_y / camera_get_view_height(view_camera[0])
-      
-        var gui_y = off_y_percent * display_get_gui_height()
-		return gui_y;
+function room_x_to_gui(_x, _camera = camera_get_active()) {
+		return (_x-camera_get_view_x(_camera)) * display_get_gui_width() / camera_get_view_width(_camera);
 }
 
 
